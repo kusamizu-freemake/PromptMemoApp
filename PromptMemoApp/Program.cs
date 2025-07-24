@@ -1,5 +1,4 @@
 ﻿using PromptEditorApp;
-using PromptManager;
 using System;
 using System.Windows.Forms;
 

@@ -1,10 +1,9 @@
 ﻿using PromptEditorApp;
 using System;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 
-namespace PromptManager
+namespace PromptMemoApp
 {
     public partial class PromptEditorForm : Form
     {
@@ -31,7 +30,7 @@ namespace PromptManager
 
         private void btnNew_Click(object sender, EventArgs e)
         {
-            txtPrompt.Text = "";
+            txtPrompt.Clear();
             currentFilePath = null;
             lstPromptFiles.ClearSelected();
         }
@@ -41,7 +40,7 @@ namespace PromptManager
             string content = txtPrompt.Text.Trim();
             if (string.IsNullOrWhiteSpace(content))
             {
-                MessageBox.Show("内容が空です。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("内容が空です。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -52,6 +51,7 @@ namespace PromptManager
                     if (dialog.ShowDialog() == DialogResult.OK)
                     {
                         string fileName = dialog.InputText;
+                        fileName = string.Concat(fileName.Split(Path.GetInvalidFileNameChars())); // ← ここを追加
                         currentFilePath = Path.Combine(dataDirectory, fileName + ".txt");
                         File.WriteAllText(currentFilePath, content);
                         LoadPromptFiles();
@@ -72,12 +72,13 @@ namespace PromptManager
             string fileName = lstPromptFiles.SelectedItem.ToString();
             string filePath = Path.Combine(dataDirectory, fileName + ".txt");
 
-            if (File.Exists(filePath))
+            var result = MessageBox.Show($"{fileName} を削除しますか？", "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result == DialogResult.Yes && File.Exists(filePath))
             {
                 File.Delete(filePath);
-                LoadPromptFiles();
                 txtPrompt.Clear();
                 currentFilePath = null;
+                LoadPromptFiles();
             }
         }
 
@@ -98,7 +99,7 @@ namespace PromptManager
 
                     if (File.Exists(newPath))
                     {
-                        MessageBox.Show("同名ファイルがすでに存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("同名のファイルがすでに存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
 
