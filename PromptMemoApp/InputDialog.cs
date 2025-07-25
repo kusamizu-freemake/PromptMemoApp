@@ -1,37 +1,36 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace PromptEditorApp
+namespace PromptMemoApp
 {
     public partial class InputDialog : Form
     {
-        public string InputText
-        {
-            get => txtInput.Text;
-            set => txtInput.Text = value;
-        }
-        public string InputTextValue { get; internal set; }
+        public string InputText => txtInput.Text;
 
-        public InputDialog()
+        public InputDialog(string title, string message, string defaultValue)
         {
             InitializeComponent();
+            this.Text = title;
+            lblMessage.Text = message;
+            txtInput.Text = defaultValue;
         }
 
         private void btnOK_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtInput.Text))
             {
-                MessageBox.Show("入力が必要です。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("値を入力してください。", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            DialogResult = DialogResult.OK;
-            Close();
+
+            this.DialogResult = DialogResult.OK;
+            this.Close();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            DialogResult = DialogResult.Cancel;
-            Close();
+            this.DialogResult = DialogResult.Cancel;
+            this.Close();
         }
     }
 }
