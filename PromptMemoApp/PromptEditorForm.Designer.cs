@@ -17,7 +17,14 @@ namespace PromptMemoApp
         private System.Windows.Forms.SplitContainer splitContainerMain;
         private System.Windows.Forms.TreeView treeViewPrompts;
         private System.Windows.Forms.Button btnCreateCategory;
+
         private System.Windows.Forms.TextBox txtPrompt;
+        private System.Windows.Forms.ListBox lstPromptFiles;
+
+        // 追加
+        private System.Windows.Forms.ComboBox cmbCategories;
+        private System.Windows.Forms.Button btnDeleteSelected;
+        private System.Windows.Forms.Button btnMoveSelected;
 
         private System.Windows.Forms.ContextMenuStrip contextMenuCategory;
         private System.Windows.Forms.ToolStripMenuItem contextMenuRenameCategory;
@@ -44,7 +51,13 @@ namespace PromptMemoApp
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.treeViewPrompts = new System.Windows.Forms.TreeView();
             this.btnCreateCategory = new System.Windows.Forms.Button();
+
+            this.lstPromptFiles = new System.Windows.Forms.ListBox();
             this.txtPrompt = new System.Windows.Forms.TextBox();
+
+            this.cmbCategories = new System.Windows.Forms.ComboBox();
+            this.btnDeleteSelected = new System.Windows.Forms.Button();
+            this.btnMoveSelected = new System.Windows.Forms.Button();
 
             this.contextMenuCategory = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuRenameCategory = new System.Windows.Forms.ToolStripMenuItem();
@@ -57,7 +70,7 @@ namespace PromptMemoApp
             });
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Size = new System.Drawing.Size(800, 24);
+            this.menuStrip.Size = new System.Drawing.Size(900, 24);
 
             this.fileMenu.Text = "ファイル";
             this.editMenu.Text = "編集";
@@ -69,7 +82,7 @@ namespace PromptMemoApp
             });
             this.toolStrip.Location = new System.Drawing.Point(0, 24);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Size = new System.Drawing.Size(800, 25);
+            this.toolStrip.Size = new System.Drawing.Size(900, 25);
 
             this.btnNew.Text = "新規";
             this.btnNew.Click += new System.EventHandler(this.btnNew_Click);
@@ -82,21 +95,25 @@ namespace PromptMemoApp
             this.splitContainerMain.Location = new System.Drawing.Point(0, 49);
             this.splitContainerMain.Name = "splitContainerMain";
 
-            // 左側（ツリービュー + カテゴリ作成ボタン）
+            // 左パネル：TreeView + カテゴリ作成ボタン
             this.splitContainerMain.Panel1.Controls.Add(this.treeViewPrompts);
             this.splitContainerMain.Panel1.Controls.Add(this.btnCreateCategory);
 
-            // 右側（プロンプトテキスト）
+            // 右パネル：ファイル一覧 + 操作用UI + 編集TextBox
+            this.splitContainerMain.Panel2.Controls.Add(this.lstPromptFiles);
+            this.splitContainerMain.Panel2.Controls.Add(this.cmbCategories);
+            this.splitContainerMain.Panel2.Controls.Add(this.btnDeleteSelected);
+            this.splitContainerMain.Panel2.Controls.Add(this.btnMoveSelected);
             this.splitContainerMain.Panel2.Controls.Add(this.txtPrompt);
 
-            this.splitContainerMain.Size = new System.Drawing.Size(800, 401);
+            this.splitContainerMain.Size = new System.Drawing.Size(900, 500);
             this.splitContainerMain.SplitterDistance = 250;
             this.splitContainerMain.TabIndex = 2;
 
             // TreeView
             this.treeViewPrompts.Location = new System.Drawing.Point(0, 30);
             this.treeViewPrompts.Name = "treeViewPrompts";
-            this.treeViewPrompts.Size = new System.Drawing.Size(250, 371);
+            this.treeViewPrompts.Size = new System.Drawing.Size(250, 470);
             this.treeViewPrompts.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             this.treeViewPrompts.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewPrompts_AfterSelect);
             this.treeViewPrompts.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.treeViewPrompts_NodeMouseClick);
@@ -108,12 +125,41 @@ namespace PromptMemoApp
             this.btnCreateCategory.Text = "カテゴリ作成";
             this.btnCreateCategory.Click += new System.EventHandler(this.btnCreateCategory_Click);
 
-            // txtPrompt
-            this.txtPrompt.Dock = System.Windows.Forms.DockStyle.Fill;
+            // ListBox (ファイル一覧)
+            this.lstPromptFiles.Location = new System.Drawing.Point(0, 30);
+            this.lstPromptFiles.Name = "lstPromptFiles";
+            this.lstPromptFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
+            this.lstPromptFiles.Size = new System.Drawing.Size(350, 200);
+            this.lstPromptFiles.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            this.lstPromptFiles.SelectedIndexChanged += new System.EventHandler(this.lstPromptFiles_SelectedIndexChanged);
+
+            // ComboBox (カテゴリ選択)
+            this.cmbCategories.Location = new System.Drawing.Point(0, 0);
+            this.cmbCategories.Name = "cmbCategories";
+            this.cmbCategories.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.cmbCategories.Size = new System.Drawing.Size(200, 23);
+
+            // 削除ボタン
+            this.btnDeleteSelected.Location = new System.Drawing.Point(210, 0);
+            this.btnDeleteSelected.Name = "btnDeleteSelected";
+            this.btnDeleteSelected.Size = new System.Drawing.Size(60, 23);
+            this.btnDeleteSelected.Text = "削除";
+            this.btnDeleteSelected.Click += new System.EventHandler(this.btnDeleteSelected_Click);
+
+            // 移動ボタン
+            this.btnMoveSelected.Location = new System.Drawing.Point(280, 0);
+            this.btnMoveSelected.Name = "btnMoveSelected";
+            this.btnMoveSelected.Size = new System.Drawing.Size(60, 23);
+            this.btnMoveSelected.Text = "移動";
+            this.btnMoveSelected.Click += new System.EventHandler(this.btnMoveSelected_Click);
+
+            // TextBox
+            this.txtPrompt.Location = new System.Drawing.Point(0, 240);
             this.txtPrompt.Multiline = true;
             this.txtPrompt.ScrollBars = ScrollBars.Vertical;
+            this.txtPrompt.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.txtPrompt.Name = "txtPrompt";
-            this.txtPrompt.Size = new System.Drawing.Size(546, 401);
+            this.txtPrompt.Size = new System.Drawing.Size(646, 260);
 
             // ContextMenuStrip
             this.contextMenuCategory.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -128,7 +174,7 @@ namespace PromptMemoApp
             this.contextMenuDeleteCategory.Click += new System.EventHandler(this.contextMenuDeleteCategory_Click);
 
             // Form
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(900, 550);
             this.Controls.Add(this.splitContainerMain);
             this.Controls.Add(this.toolStrip);
             this.Controls.Add(this.menuStrip);
@@ -138,9 +184,6 @@ namespace PromptMemoApp
 
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerMain)).EndInit();
             this.splitContainerMain.ResumeLayout(false);
-            this.splitContainerMain.Panel1.ResumeLayout(false);
-            this.splitContainerMain.Panel2.ResumeLayout(false);
-            this.splitContainerMain.Panel2.PerformLayout();
         }
     }
 }
