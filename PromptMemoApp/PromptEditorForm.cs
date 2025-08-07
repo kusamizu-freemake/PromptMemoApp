@@ -7,284 +7,237 @@ namespace PromptMemoApp
 {
     public partial class PromptEditorForm : Form
     {
-        private string baseDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "prompts");
+        private string baseDirectory = Path.Combine(Application.StartupPath, "prompts");
+        private string currentCategory = "";
+        private string currentFilePath = "";
 
         public PromptEditorForm()
         {
             InitializeComponent();
+            InitializeData();
+        }
+
+        private void InitializeData()
+        {
+            if (!Directory.Exists(baseDirectory))
+                Directory.CreateDirectory(baseDirectory);
+
             LoadCategories();
         }
 
-        /// <summary>
-        /// カテゴリ一覧を読み込む
-        /// </summary>
         private void LoadCategories()
         {
-            if (!Directory.Exists(baseDir))
-            {
-                Directory.CreateDirectory(baseDir);
-            }
-
             treeViewCategories.Nodes.Clear();
-            foreach (var dir in Directory.GetDirectories(baseDir))
+            comboBoxCategories.Items.Clear();
+
+            var dirs = Directory.GetDirectories(baseDirectory);
+            foreach (var dir in dirs)
             {
                 string category = Path.GetFileName(dir);
-                var node = new TreeNode(category) { Tag = dir };
+                TreeNode node = new TreeNode(category);
                 treeViewCategories.Nodes.Add(node);
+                comboBoxCategories.Items.Add(category);
             }
+
+            if (treeViewCategories.Nodes.Count > 0)
+                treeViewCategories.SelectedNode = treeViewCategories.Nodes[0];
         }
 
-        /// <summary>
-        /// カテゴリ選択時にファイル一覧を表示
-        /// </summary>
-        private void treeViewCategories_AfterSelect(object sender, TreeViewEventArgs e)
+        private void LoadFiles(string category)
         {
             listBoxFiles.Items.Clear();
-            if (e.Node?.Tag == null) return;
+            string dirPath = Path.Combine(baseDirectory, category);
+            if (!Directory.Exists(dirPath)) return;
 
-            string categoryDir = e.Node.Tag.ToString();
-            if (Directory.Exists(categoryDir))
+            var files = Directory.GetFiles(dirPath, "*.txt");
+            foreach (var file in files)
             {
-                foreach (var file in Directory.GetFiles(categoryDir, "*.txt"))
-                {
-                    listBoxFiles.Items.Add(Path.GetFileName(file));
-                }
-            }
-            comboBoxCategories.Items.Clear();
-            foreach (TreeNode node in treeViewCategories.Nodes)
-            {
-                comboBoxCategories.Items.Add(node.Text);
+                listBoxFiles.Items.Add(Path.GetFileNameWithoutExtension(file));
             }
         }
 
-        /// <summary>
-        /// ファイル選択時に内容を読み込む
-        /// </summary>
+        private void treeViewCategories_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            currentCategory = e.Node.Text;
+            LoadFiles(currentCategory);
+            txtEditor.Clear();
+            currentFilePath = "";
+        }
+
         private void listBoxFiles_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (treeViewCategories.SelectedNode == null || listBoxFiles.SelectedItem == null) return;
+            if (listBoxFiles.SelectedItem == null) return;
 
-            string categoryDir = treeViewCategories.SelectedNode.Tag.ToString();
-            string filePath = Path.Combine(categoryDir, listBoxFiles.SelectedItem.ToString());
+            string fileName = listBoxFiles.SelectedItem.ToString() + ".txt";
+            string filePath = Path.Combine(baseDirectory, currentCategory, fileName);
+            currentFilePath = filePath;
 
             if (File.Exists(filePath))
-            {
-                txtPrompt.Text = File.ReadAllText(filePath);
-            }
+                txtEditor.Text = File.ReadAllText(filePath);
         }
 
-        /// <summary>
-        /// 保存処理
-        /// </summary>
         private void btnSave_Click(object sender, EventArgs e)
         {
-            if (treeViewCategories.SelectedNode == null || listBoxFiles.SelectedItem == null)
+            if (string.IsNullOrEmpty(currentFilePath))
             {
-                MessageBox.Show("保存するファイルを選択してください。");
+                MessageBox.Show("ファイルが選択されていません。", "保存", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            string categoryDir = treeViewCategories.SelectedNode.Tag.ToString();
-            string filePath = Path.Combine(categoryDir, listBoxFiles.SelectedItem.ToString());
-
-            File.WriteAllText(filePath, txtPrompt.Text);
-            MessageBox.Show("保存しました");
+            File.WriteAllText(currentFilePath, txtEditor.Text);
+            MessageBox.Show("保存しました。", "保存", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void menuSave_Click(object sender, EventArgs e) => btnSave_Click(sender, e);
-
-        /// <summary>
-        /// 新規作成
-        /// </summary>
         private void btnNew_Click(object sender, EventArgs e)
         {
-            // NewFileFormを開いて作成
-            var categories = treeViewCategories.Nodes.Cast<TreeNode>().Select(n => n.Text).ToArray();
-            using (var form = new NewFileForm(categories))
+            if (string.IsNullOrEmpty(currentCategory))
             {
-                if (form.ShowDialog() == DialogResult.OK)
-                {
-                    string category = form.SelectedCategory;
-                    string fileName = form.FileName;
+                MessageBox.Show("カテゴリを選択してください。", "新規作成", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-                    if (string.IsNullOrWhiteSpace(fileName))
+            using (var dialog = new InputDialog("新規ファイル作成", "ファイル名を入力してください:", ""))
+            {
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    string name = dialog.InputText;
+                    string path = Path.Combine(baseDirectory, currentCategory, name + ".txt");
+
+                    if (File.Exists(path))
                     {
-                        MessageBox.Show("ファイル名を入力してください。");
+                        MessageBox.Show("同名のファイルが存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
 
-                    string categoryDir = Path.Combine(baseDir, category);
-                    if (!Directory.Exists(categoryDir)) Directory.CreateDirectory(categoryDir);
-
-                    string newFilePath = Path.Combine(categoryDir, fileName + ".txt");
-                    File.WriteAllText(newFilePath, ""); // 空で作成
-
-                    LoadCategories();
+                    File.WriteAllText(path, "");
+                    LoadFiles(currentCategory);
                 }
             }
         }
 
-        private void menuNew_Click(object sender, EventArgs e) => btnNew_Click(sender, e);
-
-        /// <summary>
-        /// 名前変更
-        /// </summary>
         private void btnRename_Click(object sender, EventArgs e)
         {
             if (listBoxFiles.SelectedItem == null) return;
 
-            string oldFile = listBoxFiles.SelectedItem.ToString();
-            string categoryDir = treeViewCategories.SelectedNode.Tag.ToString();
-
-            string newName = Microsoft.VisualBasic.Interaction.InputBox("新しい名前を入力してください", "名前変更", oldFile.Replace(".txt", ""));
-            if (string.IsNullOrWhiteSpace(newName)) return;
-
-            string oldPath = Path.Combine(categoryDir, oldFile);
-            string newPath = Path.Combine(categoryDir, newName + ".txt");
-            if (File.Exists(newPath))
+            string oldName = listBoxFiles.SelectedItem.ToString();
+            using (var dialog = new InputDialog("ファイル名変更", "新しいファイル名を入力してください:", oldName))
             {
-                MessageBox.Show("同じ名前のファイルが存在します。");
-                return;
-            }
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    string newName = dialog.InputText;
+                    string oldPath = Path.Combine(baseDirectory, currentCategory, oldName + ".txt");
+                    string newPath = Path.Combine(baseDirectory, currentCategory, newName + ".txt");
 
-            File.Move(oldPath, newPath);
-            treeViewCategories_AfterSelect(this, new TreeViewEventArgs(treeViewCategories.SelectedNode));
+                    if (File.Exists(newPath))
+                    {
+                        MessageBox.Show("同名のファイルが既に存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    File.Move(oldPath, newPath);
+                    LoadFiles(currentCategory);
+                }
+            }
         }
 
-        /// <summary>
-        /// 削除
-        /// </summary>
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            if (listBoxFiles.SelectedItems.Count == 0) return;
+            var items = listBoxFiles.SelectedItems.Cast<string>().ToList();
+            if (items.Count == 0) return;
 
-            if (MessageBox.Show("選択したファイルを削除してもよろしいですか？", "確認", MessageBoxButtons.YesNo) == DialogResult.No)
-                return;
-
-            string categoryDir = treeViewCategories.SelectedNode.Tag.ToString();
-            foreach (var item in listBoxFiles.SelectedItems.Cast<string>().ToList())
+            if (MessageBox.Show("選択したファイルを削除しますか？", "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                string filePath = Path.Combine(categoryDir, item);
-                if (File.Exists(filePath))
+                foreach (var name in items)
                 {
-                    File.Delete(filePath);
+                    string path = Path.Combine(baseDirectory, currentCategory, name + ".txt");
+                    if (File.Exists(path))
+                        File.Delete(path);
                 }
+                LoadFiles(currentCategory);
             }
-            treeViewCategories_AfterSelect(this, new TreeViewEventArgs(treeViewCategories.SelectedNode));
         }
 
-        /// <summary>
-        /// カテゴリ移動
-        /// </summary>
         private void btnMove_Click(object sender, EventArgs e)
         {
-            if (listBoxFiles.SelectedItems.Count == 0 || comboBoxCategories.SelectedItem == null) return;
+            var items = listBoxFiles.SelectedItems.Cast<string>().ToList();
+            if (items.Count == 0 || comboBoxCategories.SelectedItem == null) return;
 
-            string targetCategory = comboBoxCategories.SelectedItem.ToString();
-            string targetDir = Path.Combine(baseDir, targetCategory);
-            if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
-
-            string currentCategoryDir = treeViewCategories.SelectedNode.Tag.ToString();
-            foreach (var item in listBoxFiles.SelectedItems.Cast<string>().ToList())
+            string destCategory = comboBoxCategories.SelectedItem.ToString();
+            foreach (var name in items)
             {
-                string oldPath = Path.Combine(currentCategoryDir, item);
-                string newPath = Path.Combine(targetDir, item);
+                string srcPath = Path.Combine(baseDirectory, currentCategory, name + ".txt");
+                string destPath = Path.Combine(baseDirectory, destCategory, name + ".txt");
+                if (File.Exists(srcPath))
+                    File.Move(srcPath, destPath);
+            }
+            LoadFiles(currentCategory);
+        }
 
-                if (File.Exists(oldPath))
+        private void btnAddCategory_Click(object sender, EventArgs e)
+        {
+            using (var dialog = new InputDialog("カテゴリ作成", "カテゴリ名を入力してください:", ""))
+            {
+                if (dialog.ShowDialog() == DialogResult.OK)
                 {
-                    File.Move(oldPath, newPath);
+                    string name = dialog.InputText;
+                    string path = Path.Combine(baseDirectory, name);
+                    if (!Directory.Exists(path))
+                    {
+                        Directory.CreateDirectory(path);
+                        LoadCategories();
+                    }
+                    else
+                    {
+                        MessageBox.Show("同名のカテゴリが存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
-            treeViewCategories_AfterSelect(this, new TreeViewEventArgs(treeViewCategories.SelectedNode));
         }
 
-        /// <summary>
-        /// 終了
-        /// </summary>
-        private void menuExit_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
-
-        /// <summary>
-        /// お気に入り
-        /// </summary>
-        private void menuFavorites_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("お気に入り機能は未実装です。");
-        }
-
-        /// <summary>
-        /// 履歴
-        /// </summary>
-        private void menuHistory_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("履歴機能は未実装です。");
-        }
-
-        /// <summary>
-        /// 検索
-        /// </summary>
-        private void menuSearch_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("検索機能は未実装です。");
-        }
-
-        /// <summary>
-        /// カテゴリ作成
-        /// </summary>
-        private void contextAddCategory_Click(object sender, EventArgs e)
-        {
-            string name = Microsoft.VisualBasic.Interaction.InputBox("新しいカテゴリ名を入力してください", "カテゴリ作成", "");
-            if (string.IsNullOrWhiteSpace(name)) return;
-
-            string newDir = Path.Combine(baseDir, name);
-            if (Directory.Exists(newDir))
-            {
-                MessageBox.Show("カテゴリが既に存在します。");
-                return;
-            }
-            Directory.CreateDirectory(newDir);
-            LoadCategories();
-        }
-
-        /// <summary>
-        /// カテゴリ名変更
-        /// </summary>
-        private void contextRenameCategory_Click(object sender, EventArgs e)
+        private void renameCategoryMenuItem_Click(object sender, EventArgs e)
         {
             if (treeViewCategories.SelectedNode == null) return;
 
-            string oldDir = treeViewCategories.SelectedNode.Tag.ToString();
-            string oldName = Path.GetFileName(oldDir);
-
-            string newName = Microsoft.VisualBasic.Interaction.InputBox("新しいカテゴリ名を入力してください", "カテゴリ名変更", oldName);
-            if (string.IsNullOrWhiteSpace(newName)) return;
-
-            string newDir = Path.Combine(baseDir, newName);
-            if (Directory.Exists(newDir))
+            string oldName = treeViewCategories.SelectedNode.Text;
+            using (var dialog = new InputDialog("カテゴリ名変更", "新しいカテゴリ名を入力してください:", oldName))
             {
-                MessageBox.Show("カテゴリが既に存在します。");
-                return;
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    string newName = dialog.InputText;
+                    string oldPath = Path.Combine(baseDirectory, oldName);
+                    string newPath = Path.Combine(baseDirectory, newName);
+                    if (!Directory.Exists(newPath))
+                    {
+                        Directory.Move(oldPath, newPath);
+                        LoadCategories();
+                    }
+                    else
+                    {
+                        MessageBox.Show("同名のカテゴリが存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
             }
-
-            Directory.Move(oldDir, newDir);
-            LoadCategories();
         }
 
-        /// <summary>
-        /// カテゴリ削除
-        /// </summary>
-        private void contextDeleteCategory_Click(object sender, EventArgs e)
+        private void deleteCategoryMenuItem_Click(object sender, EventArgs e)
         {
             if (treeViewCategories.SelectedNode == null) return;
 
-            string dir = treeViewCategories.SelectedNode.Tag.ToString();
-            if (MessageBox.Show("このカテゴリを削除しますか？（中のファイルも削除されます）", "確認", MessageBoxButtons.YesNo) == DialogResult.No)
-                return;
-
-            Directory.Delete(dir, true);
-            LoadCategories();
+            string category = treeViewCategories.SelectedNode.Text;
+            string path = Path.Combine(baseDirectory, category);
+            if (MessageBox.Show("カテゴリを削除しますか？", "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            {
+                Directory.Delete(path, true);
+                LoadCategories();
+                listBoxFiles.Items.Clear();
+                txtEditor.Clear();
+            }
         }
+
+        private void menuExit_Click(object sender, EventArgs e) => this.Close();
+        private void menuNew_Click(object sender, EventArgs e) => btnNew_Click(sender, e);
+        private void menuFavorites_Click(object sender, EventArgs e) { /* 未実装 */ }
+        private void menuHistory_Click(object sender, EventArgs e) { /* 未実装 */ }
+        private void menuSearch_Click(object sender, EventArgs e) { /* 未実装 */ }
     }
 }
