@@ -12,6 +12,7 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <LangVersion>Default</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -102,6 +103,36 @@
     <Compile Include="PromptEditorForm.Designer.cs">
       <DependentUpon>PromptEditorForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="ShortcutSettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FavoritesManager.cs" />
+    <Compile Include="FavoritesDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HistoryManager.cs" />
+    <Compile Include="HistoryDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SearchDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TranslationManager.cs" />
+    <Compile Include="TranslationDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ApiSettingsDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SortSettingsDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="StatisticsDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ExportImportDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="InputDialog.resx">
@@ -109,6 +140,24 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PromptEditorForm.resx">
       <DependentUpon>PromptEditorForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FavoritesDialog.resx">
+      <DependentUpon>FavoritesDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HistoryDialog.resx">
+      <DependentUpon>HistoryDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SearchDialog.resx">
+      <DependentUpon>SearchDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ShortcutSettingsForm.resx">
+      <DependentUpon>ShortcutSettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TranslationDialog.resx">
+      <DependentUpon>TranslationDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ApiSettingsDialog.resx">
+      <DependentUpon>ApiSettingsDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

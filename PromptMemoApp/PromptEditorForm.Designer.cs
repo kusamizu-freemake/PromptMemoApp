@@ -30,7 +30,7 @@ namespace PromptMemoApp
         /// </summary>
         private void InitializeComponent()
         {
-            this.SuspendLayout();
+            this.components = new System.ComponentModel.Container();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.menuFile = new System.Windows.Forms.ToolStripMenuItem();
             this.menuNew = new System.Windows.Forms.ToolStripMenuItem();
@@ -39,153 +39,336 @@ namespace PromptMemoApp
             this.menuFavorites = new System.Windows.Forms.ToolStripMenuItem();
             this.menuHistory = new System.Windows.Forms.ToolStripMenuItem();
             this.menuSearch = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuShortcuts = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuSort = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuStatistics = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuExportImport = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer = new System.Windows.Forms.SplitContainer();
+            this.btnAddCategory = new System.Windows.Forms.Button();
             this.treeViewCategories = new System.Windows.Forms.TreeView();
-            this.contextMenuCategory = new System.Windows.Forms.ContextMenuStrip();
+            this.contextMenuCategory = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.renameCategoryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.deleteCategoryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.btnAddCategory = new System.Windows.Forms.Button();
-            this.listBoxFiles = new System.Windows.Forms.ListBox();
-            this.comboBoxCategories = new System.Windows.Forms.ComboBox();
+            this.txtEditor = new System.Windows.Forms.TextBox();
+            this.listViewFiles = new System.Windows.Forms.ListView();
+            this.panelButtons = new System.Windows.Forms.FlowLayoutPanel();
             this.btnNew = new System.Windows.Forms.Button();
             this.btnRename = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
             this.btnMove = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
-            this.txtEditor = new System.Windows.Forms.TextBox();
-
+            this.btnFavorite = new System.Windows.Forms.Button();
+            this.btnTranslate = new System.Windows.Forms.Button();
+            this.comboBoxCategories = new System.Windows.Forms.ComboBox();
+            this.menuStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
+            this.splitContainer.Panel1.SuspendLayout();
+            this.splitContainer.Panel2.SuspendLayout();
+            this.splitContainer.SuspendLayout();
+            this.contextMenuCategory.SuspendLayout();
+            this.panelButtons.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // menuStrip
+            // 
+            this.menuStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuFile,
             this.menuTools});
+            this.menuStrip.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip.Name = "menuStrip";
+            this.menuStrip.Size = new System.Drawing.Size(1200, 28);
+            this.menuStrip.TabIndex = 1;
+            // 
+            // menuFile
+            // 
             this.menuFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuNew,
             this.menuExit});
+            this.menuFile.Name = "menuFile";
+            this.menuFile.Size = new System.Drawing.Size(65, 24);
+            this.menuFile.Text = "ファイル";
+            // 
+            // menuNew
+            // 
+            this.menuNew.Name = "menuNew";
+            this.menuNew.Size = new System.Drawing.Size(122, 26);
+            this.menuNew.Text = "新規";
+            this.menuNew.Click += new System.EventHandler(this.menuNew_Click);
+            // 
+            // menuExit
+            // 
+            this.menuExit.Name = "menuExit";
+            this.menuExit.Size = new System.Drawing.Size(122, 26);
+            this.menuExit.Text = "終了";
+            this.menuExit.Click += new System.EventHandler(this.menuExit_Click);
+            // 
+            // menuTools
+            // 
             this.menuTools.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuFavorites,
             this.menuHistory,
-            this.menuSearch});
-            this.menuFile.Text = "ファイル";
-            this.menuNew.Text = "新規";
-            this.menuExit.Text = "終了";
+            this.menuSearch,
+            this.menuShortcuts,
+            this.menuSort,
+            this.menuStatistics,
+            this.menuExportImport});
+            this.menuTools.Name = "menuTools";
+            this.menuTools.Size = new System.Drawing.Size(56, 24);
             this.menuTools.Text = "ツール";
+            // 
+            // menuFavorites
+            // 
+            this.menuFavorites.Name = "menuFavorites";
+            this.menuFavorites.Size = new System.Drawing.Size(219, 26);
             this.menuFavorites.Text = "お気に入り";
-            this.menuHistory.Text = "履歴";
-            this.menuSearch.Text = "検索";
-            this.menuNew.Click += new System.EventHandler(this.menuNew_Click);
-            this.menuExit.Click += new System.EventHandler(this.menuExit_Click);
             this.menuFavorites.Click += new System.EventHandler(this.menuFavorites_Click);
+            // 
+            // menuHistory
+            // 
+            this.menuHistory.Name = "menuHistory";
+            this.menuHistory.Size = new System.Drawing.Size(219, 26);
+            this.menuHistory.Text = "履歴";
             this.menuHistory.Click += new System.EventHandler(this.menuHistory_Click);
+            // 
+            // menuSearch
+            // 
+            this.menuSearch.Name = "menuSearch";
+            this.menuSearch.Size = new System.Drawing.Size(219, 26);
+            this.menuSearch.Text = "検索";
             this.menuSearch.Click += new System.EventHandler(this.menuSearch_Click);
-
+            // 
+            // menuShortcuts
+            // 
+            this.menuShortcuts.Name = "menuShortcuts";
+            this.menuShortcuts.Size = new System.Drawing.Size(219, 26);
+            this.menuShortcuts.Text = "ショートカット設定";
+            this.menuShortcuts.Click += new System.EventHandler(this.menuShortcuts_Click);
+            // 
+            // menuSort
+            // 
+            this.menuSort.Name = "menuSort";
+            this.menuSort.Size = new System.Drawing.Size(219, 26);
+            this.menuSort.Text = "並び替え";
+            this.menuSort.Click += new System.EventHandler(this.menuSort_Click);
+            // 
+            // menuStatistics
+            // 
+            this.menuStatistics.Name = "menuStatistics";
+            this.menuStatistics.Size = new System.Drawing.Size(219, 26);
+            this.menuStatistics.Text = "統計情報";
+            this.menuStatistics.Click += new System.EventHandler(this.menuStatistics_Click);
+            // 
+            // menuExportImport
+            // 
+            this.menuExportImport.Name = "menuExportImport";
+            this.menuExportImport.Size = new System.Drawing.Size(219, 26);
+            this.menuExportImport.Text = "エクスポート/インポート";
+            this.menuExportImport.Click += new System.EventHandler(this.menuExportImport_Click);
+            // 
+            // splitContainer
+            // 
+            this.splitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer.Name = "splitContainer";
+            // 
+            // splitContainer.Panel1
+            // 
+            this.splitContainer.Panel1.Controls.Add(this.btnAddCategory);
+            this.splitContainer.Panel1.Controls.Add(this.treeViewCategories);
+            // 
+            // splitContainer.Panel2
+            // 
+            this.splitContainer.Panel2.Controls.Add(this.txtEditor);
+            this.splitContainer.Panel2.Controls.Add(this.listViewFiles);
+            this.splitContainer.Panel2.Controls.Add(this.panelButtons);
+            this.splitContainer.Size = new System.Drawing.Size(1200, 800);
+            this.splitContainer.SplitterDistance = 967;
+            this.splitContainer.TabIndex = 2;
+            // 
+            // btnAddCategory
+            // 
+            this.btnAddCategory.Location = new System.Drawing.Point(0, 0);
+            this.btnAddCategory.Name = "btnAddCategory";
+            this.btnAddCategory.Size = new System.Drawing.Size(100, 30);
+            this.btnAddCategory.TabIndex = 0;
+            this.btnAddCategory.Text = "カテゴリ作成";
+            this.btnAddCategory.Click += new System.EventHandler(this.btnAddCategory_Click);
+            // 
+            // treeViewCategories
+            // 
+            this.treeViewCategories.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.treeViewCategories.ContextMenuStrip = this.contextMenuCategory;
+            this.treeViewCategories.Location = new System.Drawing.Point(0, 40);
+            this.treeViewCategories.Name = "treeViewCategories";
+            this.treeViewCategories.Size = new System.Drawing.Size(1146, 1400);
+            this.treeViewCategories.TabIndex = 1;
+            this.treeViewCategories.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewCategories_AfterSelect);
+            // 
+            // contextMenuCategory
+            // 
+            this.contextMenuCategory.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuCategory.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.renameCategoryMenuItem,
             this.deleteCategoryMenuItem});
+            this.contextMenuCategory.Name = "contextMenuCategory";
+            this.contextMenuCategory.Size = new System.Drawing.Size(139, 52);
+            // 
+            // renameCategoryMenuItem
+            // 
+            this.renameCategoryMenuItem.Name = "renameCategoryMenuItem";
+            this.renameCategoryMenuItem.Size = new System.Drawing.Size(138, 24);
             this.renameCategoryMenuItem.Text = "名前変更";
-            this.deleteCategoryMenuItem.Text = "削除";
             this.renameCategoryMenuItem.Click += new System.EventHandler(this.renameCategoryMenuItem_Click);
+            // 
+            // deleteCategoryMenuItem
+            // 
+            this.deleteCategoryMenuItem.Name = "deleteCategoryMenuItem";
+            this.deleteCategoryMenuItem.Size = new System.Drawing.Size(138, 24);
+            this.deleteCategoryMenuItem.Text = "削除";
             this.deleteCategoryMenuItem.Click += new System.EventHandler(this.deleteCategoryMenuItem_Click);
-
-            this.splitContainer.Panel1.Controls.Add(this.btnAddCategory);
-            this.splitContainer.Panel1.Controls.Add(this.treeViewCategories);
-            this.splitContainer.Panel2.Controls.Add(this.comboBoxCategories);
-            this.splitContainer.Panel2.Controls.Add(this.listBoxFiles);
-            this.splitContainer.Panel2.Controls.Add(this.txtEditor);
-            this.splitContainer.Panel2.Controls.Add(this.btnNew);
-            this.splitContainer.Panel2.Controls.Add(this.btnRename);
-            this.splitContainer.Panel2.Controls.Add(this.btnDelete);
-            this.splitContainer.Panel2.Controls.Add(this.btnMove);
-            this.splitContainer.Panel2.Controls.Add(this.btnSave);
-
-            this.treeViewCategories.ContextMenuStrip = this.contextMenuCategory;
-            this.treeViewCategories.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewCategories_AfterSelect);
-
-            this.btnAddCategory.Text = "カテゴリ作成";
-            this.btnAddCategory.Click += new System.EventHandler(this.btnAddCategory_Click);
-
-            this.btnNew.Text = "新規";
-            this.btnRename.Text = "名前変更";
-            this.btnDelete.Text = "削除";
-            this.btnMove.Text = "移動";
-            this.btnSave.Text = "保存";
-
+            // 
+            // txtEditor
+            // 
+            this.txtEditor.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtEditor.Font = new System.Drawing.Font("Consolas", 9F);
+            this.txtEditor.Location = new System.Drawing.Point(0, 190);
+            this.txtEditor.Multiline = true;
+            this.txtEditor.Name = "txtEditor";
+            this.txtEditor.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtEditor.Size = new System.Drawing.Size(1104, 1286);
+            this.txtEditor.TabIndex = 0;
+            // 
+            // listViewFiles
+            // 
+            this.listViewFiles.Dock = System.Windows.Forms.DockStyle.Top;
+            this.listViewFiles.FullRowSelect = true;
+            this.listViewFiles.GridLines = true;
+            this.listViewFiles.HideSelection = false;
+            this.listViewFiles.Location = new System.Drawing.Point(0, 40);
+            this.listViewFiles.Name = "listViewFiles";
+            this.listViewFiles.Size = new System.Drawing.Size(229, 200);
+            this.listViewFiles.TabIndex = 1;
+            this.listViewFiles.UseCompatibleStateImageBehavior = false;
+            this.listViewFiles.View = System.Windows.Forms.View.Details;
+            this.listViewFiles.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewFiles_ColumnClick);
+            this.listViewFiles.SelectedIndexChanged += new System.EventHandler(this.listViewFiles_SelectedIndexChanged);
+            // 
+            // panelButtons
+            // 
+            this.panelButtons.Controls.Add(this.btnNew);
+            this.panelButtons.Controls.Add(this.btnRename);
+            this.panelButtons.Controls.Add(this.btnDelete);
+            this.panelButtons.Controls.Add(this.btnMove);
+            this.panelButtons.Controls.Add(this.btnSave);
+            this.panelButtons.Controls.Add(this.btnFavorite);
+            this.panelButtons.Controls.Add(this.btnTranslate);
+            this.panelButtons.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelButtons.Location = new System.Drawing.Point(0, 0);
+            this.panelButtons.Name = "panelButtons";
+            this.panelButtons.Padding = new System.Windows.Forms.Padding(5);
+            this.panelButtons.Size = new System.Drawing.Size(229, 40);
+            this.panelButtons.TabIndex = 2;
+            this.panelButtons.WrapContents = false;
+            // 
+            // btnNew
+            // 
+            this.btnNew.Location = new System.Drawing.Point(8, 8);
+            this.btnNew.Name = "btnNew";
+            this.btnNew.Size = new System.Drawing.Size(75, 23);
+            this.btnNew.TabIndex = 0;
+            this.btnNew.Text = "新規作成";
             this.btnNew.Click += new System.EventHandler(this.btnNew_Click);
+            // 
+            // btnRename
+            // 
+            this.btnRename.Location = new System.Drawing.Point(89, 8);
+            this.btnRename.Name = "btnRename";
+            this.btnRename.Size = new System.Drawing.Size(75, 23);
+            this.btnRename.TabIndex = 1;
+            this.btnRename.Text = "名前変更";
             this.btnRename.Click += new System.EventHandler(this.btnRename_Click);
+            // 
+            // btnDelete
+            // 
+            this.btnDelete.Location = new System.Drawing.Point(170, 8);
+            this.btnDelete.Name = "btnDelete";
+            this.btnDelete.Size = new System.Drawing.Size(75, 23);
+            this.btnDelete.TabIndex = 2;
+            this.btnDelete.Text = "削除";
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
+            // 
+            // btnMove
+            // 
+            this.btnMove.Location = new System.Drawing.Point(251, 8);
+            this.btnMove.Name = "btnMove";
+            this.btnMove.Size = new System.Drawing.Size(75, 23);
+            this.btnMove.TabIndex = 3;
+            this.btnMove.Text = "移動";
             this.btnMove.Click += new System.EventHandler(this.btnMove_Click);
+            // 
+            // btnSave
+            // 
+            this.btnSave.Location = new System.Drawing.Point(332, 8);
+            this.btnSave.Name = "btnSave";
+            this.btnSave.Size = new System.Drawing.Size(75, 23);
+            this.btnSave.TabIndex = 4;
+            this.btnSave.Text = "保存";
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
-            this.listBoxFiles.SelectedIndexChanged += new System.EventHandler(this.listBoxFiles_SelectedIndexChanged);
-
-            this.Controls.Add(this.menuStrip);
-            this.Controls.Add(this.splitContainer);
-            
-            // フォームの設定
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            // 
+            // btnFavorite
+            // 
+            this.btnFavorite.Location = new System.Drawing.Point(413, 8);
+            this.btnFavorite.Name = "btnFavorite";
+            this.btnFavorite.Size = new System.Drawing.Size(75, 23);
+            this.btnFavorite.TabIndex = 5;
+            this.btnFavorite.Text = "お気に入り";
+            this.btnFavorite.Click += new System.EventHandler(this.btnFavorite_Click);
+            // 
+            // btnTranslate
+            // 
+            this.btnTranslate.Location = new System.Drawing.Point(494, 8);
+            this.btnTranslate.Name = "btnTranslate";
+            this.btnTranslate.Size = new System.Drawing.Size(75, 23);
+            this.btnTranslate.TabIndex = 6;
+            this.btnTranslate.Text = "翻訳";
+            this.btnTranslate.Click += new System.EventHandler(this.btnTranslate_Click);
+            // 
+            // comboBoxCategories
+            // 
+            this.comboBoxCategories.Location = new System.Drawing.Point(0, 0);
+            this.comboBoxCategories.Name = "comboBoxCategories";
+            this.comboBoxCategories.Size = new System.Drawing.Size(200, 23);
+            this.comboBoxCategories.TabIndex = 0;
+            // 
+            // PromptEditorForm
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1200, 800);
+            this.Controls.Add(this.menuStrip);
+            this.Controls.Add(this.splitContainer);
+            this.Font = new System.Drawing.Font("MS UI Gothic", 10F);
             this.Name = "PromptEditorForm";
-            this.Text = "Prompt Memo App";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            
-            // メニューストリップの設定
-            this.menuStrip.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip.Size = new System.Drawing.Size(1200, 24);
-            this.MainMenuStrip = this.menuStrip;
-            
-            // SplitContainerの設定
-            this.splitContainer.Location = new System.Drawing.Point(0, 24);
-            this.splitContainer.Size = new System.Drawing.Size(1200, 776);
-            this.splitContainer.SplitterDistance = 300;
-            this.splitContainer.Orientation = System.Windows.Forms.Orientation.Vertical;
-            
-            // Panel1 (左側) - カテゴリツリー
-            this.treeViewCategories.Location = new System.Drawing.Point(0, 40);
-            this.treeViewCategories.Size = new System.Drawing.Size(300, 700);
-            this.treeViewCategories.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            
-            this.btnAddCategory.Location = new System.Drawing.Point(0, 0);
-            this.btnAddCategory.Size = new System.Drawing.Size(100, 30);
-            this.btnAddCategory.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left));
-            
-            // Panel2 (右側) - ファイルリストとエディタ
-            this.comboBoxCategories.Location = new System.Drawing.Point(0, 0);
-            this.comboBoxCategories.Size = new System.Drawing.Size(200, 20);
-            this.comboBoxCategories.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left));
-            
-            this.listBoxFiles.Location = new System.Drawing.Point(0, 30);
-            this.listBoxFiles.Size = new System.Drawing.Size(200, 150);
-            this.listBoxFiles.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            
-            // ボタンの配置
-            this.btnNew.Location = new System.Drawing.Point(220, 0);
-            this.btnNew.Size = new System.Drawing.Size(80, 25);
-            this.btnNew.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
-            
-            this.btnRename.Location = new System.Drawing.Point(310, 0);
-            this.btnRename.Size = new System.Drawing.Size(80, 25);
-            this.btnRename.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
-            
-            this.btnDelete.Location = new System.Drawing.Point(400, 0);
-            this.btnDelete.Size = new System.Drawing.Size(80, 25);
-            this.btnDelete.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
-            
-            this.btnMove.Location = new System.Drawing.Point(490, 0);
-            this.btnMove.Size = new System.Drawing.Size(80, 25);
-            this.btnMove.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
-            
-            this.btnSave.Location = new System.Drawing.Point(580, 0);
-            this.btnSave.Size = new System.Drawing.Size(80, 25);
-            this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
-            
-            // テキストエディタの設定
-            this.txtEditor.Location = new System.Drawing.Point(0, 190);
-            this.txtEditor.Size = new System.Drawing.Size(900, 586);
-            this.txtEditor.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtEditor.Multiline = true;
-            this.txtEditor.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtEditor.Font = new System.Drawing.Font("Consolas", 9F);
-            
+            this.Text = "Prompt Memo App";
+            this.Load += new System.EventHandler(this.PromptEditorForm_Load);
+            this.menuStrip.ResumeLayout(false);
+            this.menuStrip.PerformLayout();
+            this.splitContainer.Panel1.ResumeLayout(false);
+            this.splitContainer.Panel2.ResumeLayout(false);
+            this.splitContainer.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
+            this.splitContainer.ResumeLayout(false);
+            this.contextMenuCategory.ResumeLayout(false);
+            this.panelButtons.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
 
         #endregion
@@ -198,18 +381,25 @@ namespace PromptMemoApp
         private System.Windows.Forms.ToolStripMenuItem menuFavorites;
         private System.Windows.Forms.ToolStripMenuItem menuHistory;
         private System.Windows.Forms.ToolStripMenuItem menuSearch;
+        private System.Windows.Forms.ToolStripMenuItem menuShortcuts;
+        private System.Windows.Forms.ToolStripMenuItem menuSort;
+        private System.Windows.Forms.ToolStripMenuItem menuStatistics;
+        private System.Windows.Forms.ToolStripMenuItem menuExportImport;
 
         private System.Windows.Forms.SplitContainer splitContainer;
         private System.Windows.Forms.TreeView treeViewCategories;
-        private System.Windows.Forms.ListBox listBoxFiles;
         private System.Windows.Forms.TextBox txtEditor;
         private System.Windows.Forms.Button btnNew;
         private System.Windows.Forms.Button btnRename;
         private System.Windows.Forms.Button btnDelete;
         private System.Windows.Forms.Button btnMove;
         private System.Windows.Forms.Button btnSave;
+        private System.Windows.Forms.Button btnFavorite;
+        private System.Windows.Forms.Button btnTranslate;
         private System.Windows.Forms.ComboBox comboBoxCategories;
         private System.Windows.Forms.Button btnAddCategory;
+        private System.Windows.Forms.ListView listViewFiles;
+        private System.Windows.Forms.FlowLayoutPanel panelButtons;
 
         private System.Windows.Forms.ContextMenuStrip contextMenuCategory;
         private System.Windows.Forms.ToolStripMenuItem renameCategoryMenuItem;
