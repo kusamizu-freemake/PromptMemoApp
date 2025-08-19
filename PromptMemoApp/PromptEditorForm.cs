@@ -17,12 +17,12 @@ namespace PromptMemoApp
         private FavoritesManager favoritesManager;
         private HistoryManager historyManager;
         private TranslationManager translationManager;
-        
+
         // 並び替え機能用のフィールド
         private SortOrder currentSortOrder = SortOrder.Ascending;
         private string currentSortField = "Name";
         private List<FileInfo> currentFileList = new List<FileInfo>();
-        
+
         // 統計情報用
         private Dictionary<string, int> categoryStats = new Dictionary<string, int>();
 
@@ -154,10 +154,10 @@ namespace PromptMemoApp
                 currentSortField = sortField;
                 currentSortOrder = SortOrder.Ascending;
             }
-            
+
             SortAndDisplayFiles();
         }
-        
+
         // エクスポート機能
         public void ExportData(string exportPath)
         {
@@ -167,7 +167,7 @@ namespace PromptMemoApp
                 {
                     Categories = new List<CategoryData>()
                 };
-                
+
                 var categories = Directory.GetDirectories(baseDirectory);
                 foreach (var categoryPath in categories)
                 {
@@ -177,14 +177,14 @@ namespace PromptMemoApp
                         Name = categoryName,
                         Files = new List<FileData>()
                     };
-                    
+
                     var files = Directory.GetFiles(categoryPath, "*.txt");
                     foreach (var filePath in files)
                     {
                         var fileName = Path.GetFileNameWithoutExtension(filePath);
                         var content = File.ReadAllText(filePath);
                         var fileInfo = new FileInfo(filePath);
-                        
+
                         categoryData.Files.Add(new FileData
                         {
                             Name = fileName,
@@ -193,23 +193,23 @@ namespace PromptMemoApp
                             Modified = fileInfo.LastWriteTime
                         });
                     }
-                    
+
                     exportData.Categories.Add(categoryData);
                 }
-                
+
                 var json = JsonSerializer.Serialize(exportData, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(exportPath, json);
-                
-                MessageBox.Show("データのエクスポートが完了しました。", "エクスポート", 
+
+                MessageBox.Show("データのエクスポートが完了しました。", "エクスポート",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"エクスポート中にエラーが発生しました: {ex.Message}", "エラー", 
+                MessageBox.Show($"エクスポート中にエラーが発生しました: {ex.Message}", "エラー",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         // インポート機能
         public void ImportData(string importPath)
         {
@@ -217,14 +217,14 @@ namespace PromptMemoApp
             {
                 var json = File.ReadAllText(importPath);
                 var importData = JsonSerializer.Deserialize<ExportData>(json);
-                
+
                 if (importData?.Categories == null)
                 {
-                    MessageBox.Show("インポートファイルの形式が正しくありません。", "エラー", 
+                    MessageBox.Show("インポートファイルの形式が正しくありません。", "エラー",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
-                
+
                 foreach (var categoryData in importData.Categories)
                 {
                     var categoryPath = Path.Combine(baseDirectory, categoryData.Name);
@@ -232,57 +232,57 @@ namespace PromptMemoApp
                     {
                         Directory.CreateDirectory(categoryPath);
                     }
-                    
+
                     foreach (var fileData in categoryData.Files)
                     {
                         var filePath = Path.Combine(categoryPath, fileData.Name + ".txt");
                         File.WriteAllText(filePath, fileData.Content);
-                        
+
                         // ファイルの作成日時と更新日時を設定
                         File.SetCreationTime(filePath, fileData.Created);
                         File.SetLastWriteTime(filePath, fileData.Modified);
                     }
                 }
-                
+
                 LoadCategories();
-                MessageBox.Show("データのインポートが完了しました。", "インポート", 
+                MessageBox.Show("データのインポートが完了しました。", "インポート",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"インポート中にエラーが発生しました: {ex.Message}", "エラー", 
+                MessageBox.Show($"インポート中にエラーが発生しました: {ex.Message}", "エラー",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         // 統計情報の取得
         public Dictionary<string, object> GetStatistics()
         {
             var stats = new Dictionary<string, object>();
-            
+
             try
             {
                 var categories = Directory.GetDirectories(baseDirectory);
                 int totalFiles = 0;
                 long totalSize = 0;
                 var categoryCounts = new Dictionary<string, int>();
-                
+
                 foreach (var categoryPath in categories)
                 {
                     var categoryName = Path.GetFileName(categoryPath);
                     var files = Directory.GetFiles(categoryPath, "*.txt");
                     var fileCount = files.Length;
-                    
+
                     categoryCounts[categoryName] = fileCount;
                     totalFiles += fileCount;
-                    
+
                     foreach (var filePath in files)
                     {
                         var fileInfo = new FileInfo(filePath);
                         totalSize += fileInfo.Length;
                     }
                 }
-                
+
                 stats["TotalCategories"] = categories.Length;
                 stats["TotalFiles"] = totalFiles;
                 stats["TotalSize"] = totalSize;
@@ -293,7 +293,7 @@ namespace PromptMemoApp
             {
                 stats["Error"] = ex.Message;
             }
-            
+
             return stats;
         }
 
@@ -629,7 +629,7 @@ namespace PromptMemoApp
                 }
             }
         }
-        
+
         private void ShowSortSettings()
         {
             using (var dialog = new SortSettingsDialog(this))
@@ -637,7 +637,7 @@ namespace PromptMemoApp
                 dialog.ShowDialog();
             }
         }
-        
+
         private void ShowStatistics()
         {
             var stats = GetStatistics();
@@ -646,7 +646,7 @@ namespace PromptMemoApp
                 dialog.ShowDialog();
             }
         }
-        
+
         private void ShowExportImportDialog()
         {
             using (var dialog = new ExportImportDialog(this))
@@ -737,13 +737,13 @@ namespace PromptMemoApp
         public DateTime ExportDate { get; set; } = DateTime.Now;
         public string Version { get; set; } = "1.0";
     }
-    
+
     public class CategoryData
     {
         public string Name { get; set; }
         public List<FileData> Files { get; set; }
     }
-    
+
     public class FileData
     {
         public string Name { get; set; }
