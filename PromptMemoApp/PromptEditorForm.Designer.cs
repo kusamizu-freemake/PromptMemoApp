@@ -243,6 +243,12 @@ namespace PromptMemoApp
             // 
             // listViewFiles
             // 
+            this.listViewFiles.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            new System.Windows.Forms.ColumnHeader() { Text = "名前", Width = 250 },
+            new System.Windows.Forms.ColumnHeader() { Text = "作成日", Width = 120 },
+            new System.Windows.Forms.ColumnHeader() { Text = "更新日", Width = 120 },
+            new System.Windows.Forms.ColumnHeader() { Text = "サイズ", Width = 80 }
+});
             this.listViewFiles.Dock = System.Windows.Forms.DockStyle.Top;
             this.listViewFiles.FullRowSelect = true;
             this.listViewFiles.GridLines = true;
