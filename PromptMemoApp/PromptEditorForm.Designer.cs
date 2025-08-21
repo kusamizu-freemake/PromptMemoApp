@@ -45,7 +45,6 @@ namespace PromptMemoApp
             this.btnNew = new System.Windows.Forms.Button();
             this.btnRename = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
-            this.btnMove = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnFavorite = new System.Windows.Forms.Button();
             this.btnTranslate = new System.Windows.Forms.Button();
@@ -267,7 +266,6 @@ namespace PromptMemoApp
             this.panelButtons.Controls.Add(this.btnNew);
             this.panelButtons.Controls.Add(this.btnRename);
             this.panelButtons.Controls.Add(this.btnDelete);
-            this.panelButtons.Controls.Add(this.btnMove);
             this.panelButtons.Controls.Add(this.btnSave);
             this.panelButtons.Controls.Add(this.btnFavorite);
             this.panelButtons.Controls.Add(this.btnTranslate);
@@ -306,27 +304,18 @@ namespace PromptMemoApp
             this.btnDelete.Text = "削除";
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
-            // btnMove
-            // 
-            this.btnMove.Location = new System.Drawing.Point(251, 8);
-            this.btnMove.Name = "btnMove";
-            this.btnMove.Size = new System.Drawing.Size(75, 23);
-            this.btnMove.TabIndex = 3;
-            this.btnMove.Text = "移動";
-            this.btnMove.Click += new System.EventHandler(this.btnMove_Click);
-            // 
             // btnSave
             // 
-            this.btnSave.Location = new System.Drawing.Point(332, 8);
+            this.btnSave.Location = new System.Drawing.Point(251, 8);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(75, 23);
-            this.btnSave.TabIndex = 4;
+            this.btnSave.TabIndex = 3;
             this.btnSave.Text = "保存";
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
             // btnFavorite
             // 
-            this.btnFavorite.Location = new System.Drawing.Point(413, 8);
+            this.btnFavorite.Location = new System.Drawing.Point(332, 8);
             this.btnFavorite.Name = "btnFavorite";
             this.btnFavorite.Size = new System.Drawing.Size(75, 23);
             this.btnFavorite.TabIndex = 5;
@@ -335,7 +324,7 @@ namespace PromptMemoApp
             // 
             // btnTranslate
             // 
-            this.btnTranslate.Location = new System.Drawing.Point(494, 8);
+            this.btnTranslate.Location = new System.Drawing.Point(413, 8);
             this.btnTranslate.Name = "btnTranslate";
             this.btnTranslate.Size = new System.Drawing.Size(75, 23);
             this.btnTranslate.TabIndex = 6;
@@ -401,7 +390,6 @@ namespace PromptMemoApp
         private System.Windows.Forms.Button btnNew;
         private System.Windows.Forms.Button btnRename;
         private System.Windows.Forms.Button btnDelete;
-        private System.Windows.Forms.Button btnMove;
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Button btnFavorite;
         private System.Windows.Forms.Button btnTranslate;
@@ -409,6 +397,5 @@ namespace PromptMemoApp
         private System.Windows.Forms.ContextMenuStrip contextMenuCategory;
         private System.Windows.Forms.ToolStripMenuItem renameCategoryMenuItem;
         private System.Windows.Forms.ToolStripMenuItem deleteCategoryMenuItem;
-
     }
 }

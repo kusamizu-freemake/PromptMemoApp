@@ -32,28 +32,27 @@ namespace PromptMemoApp
             SaveApiKey();
         }
 
-        public async Task<string> TranslateAsync(string text, string targetLang = "EN")
+        public async Task<string> TranslateAsync(string text, string sourceLang, string targetLang)
         {
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                throw new InvalidOperationException("DeepL APIキーが設定されていません。");
-            }
+            if (string.IsNullOrWhiteSpace(apiKey))
+                throw new InvalidOperationException("APIキーが設定されていません。");
 
-            if (string.IsNullOrEmpty(text))
-            {
+            if (string.IsNullOrWhiteSpace(text))
                 return text;
-            }
 
             try
             {
+                var request = new HttpRequestMessage(HttpMethod.Post, DeepLApiUrl);
                 var content = new FormUrlEncodedContent(new[]
                 {
                     new KeyValuePair<string, string>("auth_key", apiKey),
                     new KeyValuePair<string, string>("text", text),
+                    new KeyValuePair<string, string>("source_lang", sourceLang),
                     new KeyValuePair<string, string>("target_lang", targetLang)
                 });
+                request.Content = content;
 
-                var response = await httpClient.PostAsync(DeepLApiUrl, content);
+                var response = await httpClient.SendAsync(request);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
@@ -61,7 +60,7 @@ namespace PromptMemoApp
                     var translationResponse = JsonSerializer.Deserialize<DeepLResponse>(responseContent);
                     if (translationResponse != null && translationResponse.Translations != null && translationResponse.Translations.Count > 0)
                     {
-                        return translationResponse.Translations[0].Text != null ? translationResponse.Translations[0].Text : text;
+                        return translationResponse.Translations[0].Text ?? text;
                     }
                     return text;
                 }
