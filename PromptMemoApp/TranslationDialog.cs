@@ -225,6 +225,7 @@ namespace PromptMemoApp
             try
             {
                 string translated = await translationManager.TranslateAsync(txtOriginal.Text, sourceLang, targetLang);
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] 翻訳結果: {translated}"); // ← 追加
                 txtTranslated.Text = translated;
             }
             catch (Exception ex)

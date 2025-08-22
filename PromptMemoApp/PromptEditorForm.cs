@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -391,21 +392,20 @@ namespace PromptMemoApp
             {
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
-                    // 元言語・翻訳後言語を取得
-                    string sourceLang = dialog.GetSourceLanguage(); // "JA" or "EN"
-                    string targetLang = dialog.GetTargetLanguage(); // "JA" or "EN"
+                    string sourceLang = dialog.GetSourceLanguage();
+                    string targetLang = dialog.GetTargetLanguage();
                     if (sourceLang == targetLang)
                     {
                         MessageBox.Show("元言語と翻訳後の言語が同じです。", "翻訳", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return;
                     }
-                    // 非同期で翻訳
+                    // ここでtranslationManagerのメソッドを呼ぶ
                     string translated = await translationManager.TranslateAsync(txtEditor.Text, sourceLang, targetLang);
                     txtEditor.Text = translated;
                 }
             }
         }
-            
+
         private void btnNew_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(currentCategory))
@@ -738,17 +738,6 @@ namespace PromptMemoApp
         private void PromptEditorForm_Load(object sender, EventArgs e)
         {
 
-        }
-
-        private async Task<string> TranslateTextAsync(string text, string fromLang, string toLang)
-        {
-            // ここに本物のAPI呼び出しを実装してください
-            // 例: Google翻訳API, DeepL, Azure Translator など
-            // 今はダミーで「[翻訳]」を付けて返します
-            await Task.Delay(500); // 疑似的な非同期処理
-            if (string.IsNullOrWhiteSpace(text)) return "";
-            if (fromLang == toLang) return text;
-            return $"[翻訳]{text}";
         }
     }
 

@@ -52,12 +52,18 @@ namespace PromptMemoApp
                 });
                 request.Content = content;
 
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] DeepL APIリクエスト: source_lang={sourceLang}, target_lang={targetLang}, text={text}");
+
                 var response = await httpClient.SendAsync(request);
                 var responseContent = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] DeepL API レスポンス: {responseContent}");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var translationResponse = JsonSerializer.Deserialize<DeepLResponse>(responseContent);
+                    var translationResponse = JsonSerializer.Deserialize<DeepLResponse>(
+                        responseContent,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
                     if (translationResponse != null && translationResponse.Translations != null && translationResponse.Translations.Count > 0)
                     {
                         return translationResponse.Translations[0].Text ?? text;
@@ -71,6 +77,7 @@ namespace PromptMemoApp
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] 翻訳エラー: {ex}");
                 throw new Exception($"翻訳中にエラーが発生しました: {ex.Message}");
             }
         }
@@ -121,8 +128,8 @@ namespace PromptMemoApp
                 try
                 {
                     var json = File.ReadAllText(configPath);
-                                var config = JsonSerializer.Deserialize<Config>(json);
-            apiKey = (config != null && config.DeepLApiKey != null) ? config.DeepLApiKey : "";
+                    var config = JsonSerializer.Deserialize<Config>(json);
+                    apiKey = (config != null && config.DeepLApiKey != null) ? config.DeepLApiKey : "";
                 }
                 catch
                 {
