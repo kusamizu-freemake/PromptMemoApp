@@ -21,31 +21,63 @@ namespace PromptMemoApp
 
         private void InitializeComponent()
         {
-            // --- 元言語選択 ComboBox の追加 ---
+            // --- 元のテキストラベルと元言語ComboBox ---
+            this.lblOriginal = new System.Windows.Forms.Label();
+            this.lblOriginal.Location = new System.Drawing.Point(10, 40);
+            this.lblOriginal.Name = "lblOriginal";
+            this.lblOriginal.Size = new System.Drawing.Size(100, 20);
+            this.lblOriginal.TabIndex = 5;
+            this.lblOriginal.Text = "元のテキスト：";
+
             this.comboBoxSourceLang = new System.Windows.Forms.ComboBox();
             this.comboBoxSourceLang.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxSourceLang.Items.AddRange(new object[] {
         "日本語 (JA)",
         "英語 (EN)"
     });
-            this.comboBoxSourceLang.Location = new System.Drawing.Point(170, 10);
+            this.comboBoxSourceLang.Location = new System.Drawing.Point(115, 40); // ← lblOriginalの右隣に配置
             this.comboBoxSourceLang.Name = "comboBoxSourceLang";
-            this.comboBoxSourceLang.Size = new System.Drawing.Size(150, 23);
-            this.comboBoxSourceLang.TabIndex = 0;
+            this.comboBoxSourceLang.Size = new System.Drawing.Size(120, 23);
+            this.comboBoxSourceLang.TabIndex = 6;
             this.comboBoxSourceLang.SelectedIndex = 0;
 
-            // 既存の comboBoxTargetLang の選択肢を日本語・英語のみに制限
+            // --- 翻訳結果ラベルと翻訳後言語ComboBox ---
+            this.lblTranslated = new System.Windows.Forms.Label();
+            this.lblTranslated.Location = new System.Drawing.Point(10, 225);
+            this.lblTranslated.Name = "lblTranslated";
+            this.lblTranslated.Size = new System.Drawing.Size(100, 20);
+            this.lblTranslated.TabIndex = 7;
+            this.lblTranslated.Text = "翻訳結果：";
+
             this.comboBoxTargetLang = new System.Windows.Forms.ComboBox();
             this.comboBoxTargetLang.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxTargetLang.Items.AddRange(new object[] {
         "日本語 (JA)",
         "英語 (EN)"
     });
-            this.comboBoxTargetLang.Location = new System.Drawing.Point(10, 10);
+            this.comboBoxTargetLang.Location = new System.Drawing.Point(115, 225); // ← lblTranslatedの右隣に配置
             this.comboBoxTargetLang.Name = "comboBoxTargetLang";
-            this.comboBoxTargetLang.Size = new System.Drawing.Size(150, 23);
-            this.comboBoxTargetLang.TabIndex = 1;
+            this.comboBoxTargetLang.Size = new System.Drawing.Size(120, 23);
+            this.comboBoxTargetLang.TabIndex = 8;
             this.comboBoxTargetLang.SelectedIndex = 1;
+
+            // --- テキストボックスの位置も右にずらす ---
+            this.txtOriginal = new System.Windows.Forms.TextBox();
+            this.txtOriginal.Location = new System.Drawing.Point(10, 65);
+            this.txtOriginal.Multiline = true;
+            this.txtOriginal.Name = "txtOriginal";
+            this.txtOriginal.ReadOnly = true;
+            this.txtOriginal.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtOriginal.Size = new System.Drawing.Size(610, 150);
+            this.txtOriginal.TabIndex = 9;
+
+            this.txtTranslated = new System.Windows.Forms.TextBox();
+            this.txtTranslated.Location = new System.Drawing.Point(10, 250);
+            this.txtTranslated.Multiline = true;
+            this.txtTranslated.Name = "txtTranslated";
+            this.txtTranslated.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtTranslated.Size = new System.Drawing.Size(610, 150);
+            this.txtTranslated.TabIndex = 10;
 
             this.btnTranslate = new System.Windows.Forms.Button();
             this.btnDetect = new System.Windows.Forms.Button();
@@ -94,7 +126,7 @@ namespace PromptMemoApp
             this.lblOriginal.Name = "lblOriginal";
             this.lblOriginal.Size = new System.Drawing.Size(100, 20);
             this.lblOriginal.TabIndex = 5;
-            this.lblOriginal.Text = "元のテキスト:";
+            this.lblOriginal.Text = "元のテキスト：";
             // 
             // txtOriginal
             // 
@@ -112,7 +144,7 @@ namespace PromptMemoApp
             this.lblTranslated.Name = "lblTranslated";
             this.lblTranslated.Size = new System.Drawing.Size(100, 20);
             this.lblTranslated.TabIndex = 7;
-            this.lblTranslated.Text = "翻訳結果:";
+            this.lblTranslated.Text = "翻訳結果：";
             // 
             // txtTranslated
             // 
