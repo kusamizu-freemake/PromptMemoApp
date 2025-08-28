@@ -4,171 +4,16 @@ using System.Windows.Forms;
 
 namespace PromptMemoApp
 {
+    /// <summary>
+    /// 翻訳機能のダイアログフォーム
+    /// </summary>
     public partial class TranslationDialog : Form
     {
-        private TranslationManager translationManager;
-        private string originalText;
+        #region フィールド
+        private readonly TranslationManager translationManager;
+        private readonly string originalText;
 
-        public TranslationDialog(TranslationManager translationManager, string text)
-        {
-            this.translationManager = translationManager;
-            this.originalText = text;
-            InitializeComponent();
-            LoadText();
-        }
-
-        private void InitializeComponent()
-        {
-            // --- 元のテキストラベルと元言語ComboBox ---
-            this.lblOriginal = new System.Windows.Forms.Label();
-            this.lblOriginal.Location = new System.Drawing.Point(10, 40);
-            this.lblOriginal.Name = "lblOriginal";
-            this.lblOriginal.Size = new System.Drawing.Size(100, 20);
-            this.lblOriginal.TabIndex = 5;
-            this.lblOriginal.Text = "元のテキスト：";
-
-            this.comboBoxSourceLang = new System.Windows.Forms.ComboBox();
-            this.comboBoxSourceLang.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxSourceLang.Items.AddRange(new object[] {
-                "日本語 (JA)",
-                "英語 (EN)"
-            });
-            this.comboBoxSourceLang.Location = new System.Drawing.Point(115, 40);
-            this.comboBoxSourceLang.Name = "comboBoxSourceLang";
-            this.comboBoxSourceLang.Size = new System.Drawing.Size(120, 23);
-            this.comboBoxSourceLang.TabIndex = 6;
-            this.comboBoxSourceLang.SelectedIndex = 0;
-
-            // --- 翻訳結果ラベルと翻訳後言語ComboBox ---
-            this.lblTranslated = new System.Windows.Forms.Label();
-            this.lblTranslated.Location = new System.Drawing.Point(10, 225);
-            this.lblTranslated.Name = "lblTranslated";
-            this.lblTranslated.Size = new System.Drawing.Size(100, 20);
-            this.lblTranslated.TabIndex = 7;
-            this.lblTranslated.Text = "翻訳結果：";
-
-            this.comboBoxTargetLang = new System.Windows.Forms.ComboBox();
-            this.comboBoxTargetLang.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxTargetLang.Items.AddRange(new object[] {
-                "日本語 (JA)",
-                "英語 (EN)"
-            });
-            this.comboBoxTargetLang.Location = new System.Drawing.Point(115, 225);
-            this.comboBoxTargetLang.Name = "comboBoxTargetLang";
-            this.comboBoxTargetLang.Size = new System.Drawing.Size(120, 23);
-            this.comboBoxTargetLang.TabIndex = 8;
-            this.comboBoxTargetLang.SelectedIndex = 1;
-
-            // --- テキストボックス ---
-            this.txtOriginal = new System.Windows.Forms.TextBox();
-            this.txtOriginal.Location = new System.Drawing.Point(10, 65);
-            this.txtOriginal.Multiline = true;
-            this.txtOriginal.Name = "txtOriginal";
-            this.txtOriginal.ReadOnly = true;
-            this.txtOriginal.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtOriginal.Size = new System.Drawing.Size(610, 150);
-            this.txtOriginal.TabIndex = 9;
-
-            this.txtTranslated = new System.Windows.Forms.TextBox();
-            this.txtTranslated.Location = new System.Drawing.Point(10, 250);
-            this.txtTranslated.Multiline = true;
-            this.txtTranslated.Name = "txtTranslated";
-            this.txtTranslated.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtTranslated.Size = new System.Drawing.Size(610, 150);
-            this.txtTranslated.TabIndex = 10;
-
-            // --- ボタン群 ---
-            this.btnTranslate = new System.Windows.Forms.Button();
-            this.btnDetect = new System.Windows.Forms.Button();
-            this.btnApiSettings = new System.Windows.Forms.Button();
-            this.btnCopy = new System.Windows.Forms.Button();
-            this.btnReplace = new System.Windows.Forms.Button();
-            this.btnClose = new System.Windows.Forms.Button();
-            this.lblStatus = new System.Windows.Forms.Label();
-
-            this.SuspendLayout();
-
-            // btnTranslate
-            this.btnTranslate.Location = new System.Drawing.Point(330, 10);
-            this.btnTranslate.Name = "btnTranslate";
-            this.btnTranslate.Size = new System.Drawing.Size(80, 25);
-            this.btnTranslate.TabIndex = 2;
-            this.btnTranslate.Text = "翻訳";
-            this.btnTranslate.Click += new System.EventHandler(this.BtnTranslate_Click);
-
-            // btnDetect
-            this.btnDetect.Location = new System.Drawing.Point(420, 10);
-            this.btnDetect.Name = "btnDetect";
-            this.btnDetect.Size = new System.Drawing.Size(80, 25);
-            this.btnDetect.TabIndex = 3;
-            this.btnDetect.Text = "言語検出";
-            this.btnDetect.Enabled = false;
-            this.btnDetect.Click += new System.EventHandler(this.BtnDetect_Click);
-
-            // btnApiSettings
-            this.btnApiSettings.Location = new System.Drawing.Point(510, 10);
-            this.btnApiSettings.Name = "btnApiSettings";
-            this.btnApiSettings.Size = new System.Drawing.Size(80, 25);
-            this.btnApiSettings.TabIndex = 4;
-            this.btnApiSettings.Text = "API設定";
-            this.btnApiSettings.Click += new System.EventHandler(this.BtnApiSettings_Click);
-
-            // btnCopy
-            this.btnCopy.Location = new System.Drawing.Point(10, 420);
-            this.btnCopy.Name = "btnCopy";
-            this.btnCopy.Size = new System.Drawing.Size(80, 25);
-            this.btnCopy.TabIndex = 11;
-            this.btnCopy.Text = "コピー";
-            this.btnCopy.Click += new System.EventHandler(this.BtnCopy_Click);
-
-            // btnReplace
-            this.btnReplace.Location = new System.Drawing.Point(100, 420);
-            this.btnReplace.Name = "btnReplace";
-            this.btnReplace.Size = new System.Drawing.Size(80, 25);
-            this.btnReplace.TabIndex = 12;
-            this.btnReplace.Text = "置き換え";
-            this.btnReplace.Click += new System.EventHandler(this.BtnReplace_Click);
-
-            // btnClose
-            this.btnClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnClose.Location = new System.Drawing.Point(540, 420);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(80, 25);
-            this.btnClose.TabIndex = 13;
-            this.btnClose.Text = "閉じる";
-
-            // lblStatus
-            this.lblStatus.Location = new System.Drawing.Point(10, 450);
-            this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(610, 20);
-            this.lblStatus.TabIndex = 14;
-            this.lblStatus.Text = "翻訳する言語を選択して「翻訳」ボタンをクリックしてください。";
-
-            // TranslationDialog
-            this.ClientSize = new System.Drawing.Size(632, 501);
-            this.Controls.Add(this.btnClose);
-            this.Controls.Add(this.btnReplace);
-            this.Controls.Add(this.btnCopy);
-            this.Controls.Add(this.txtTranslated);
-            this.Controls.Add(this.lblTranslated);
-            this.Controls.Add(this.txtOriginal);
-            this.Controls.Add(this.lblOriginal);
-            this.Controls.Add(this.btnApiSettings);
-            this.Controls.Add(this.btnDetect);
-            this.Controls.Add(this.btnTranslate);
-            this.Controls.Add(this.comboBoxSourceLang);
-            this.Controls.Add(this.comboBoxTargetLang);
-            this.Controls.Add(this.lblStatus);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "TranslationDialog";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "翻訳";
-            this.ResumeLayout(false);
-            this.PerformLayout();
-        }
-
+        // UI コントロール
         private ComboBox comboBoxSourceLang;
         private ComboBox comboBoxTargetLang;
         private Button btnTranslate;
@@ -182,101 +27,249 @@ namespace PromptMemoApp
         private Label lblStatus;
         private Label lblOriginal;
         private Label lblTranslated;
+        #endregion
 
-        private void LoadText()
+        #region コンストラクタ
+        /// <summary>
+        /// TranslationDialogの新しいインスタンスを初期化
+        /// </summary>
+        /// <param name="translationManager">翻訳マネージャー</param>
+        /// <param name="text">翻訳対象のテキスト</param>
+        public TranslationDialog(TranslationManager translationManager, string text)
+        {
+            this.translationManager = translationManager;
+            this.originalText = text;
+            InitializeComponent();
+            LoadOriginalText();
+        }
+        #endregion
+
+        #region 初期化
+        /// <summary>
+        /// フォームのコンポーネントを初期化
+        /// </summary>
+        private void InitializeComponent()
+        {
+            CreateLabels();
+            CreateComboBoxes();
+            CreateTextBoxes();
+            CreateButtons();
+            SetupFormLayout();
+        }
+
+        /// <summary>
+        /// ラベルコントロールを作成
+        /// </summary>
+        private void CreateLabels()
+        {
+            lblOriginal = CreateLabel("元のテキスト：", 10, 40);
+            lblTranslated = CreateLabel("翻訳結果：", 10, 225);
+            lblStatus = CreateLabel("翻訳する言語を選択して「翻訳」ボタンをクリックしてください。", 10, 450, 610);
+        }
+
+        /// <summary>
+        /// コンボボックスを作成
+        /// </summary>
+        private void CreateComboBoxes()
+        {
+            comboBoxSourceLang = CreateLanguageComboBox(115, 40, 0); // 日本語を初期選択
+            comboBoxTargetLang = CreateLanguageComboBox(115, 225, 1); // 英語を初期選択
+        }
+
+        /// <summary>
+        /// テキストボックスを作成
+        /// </summary>
+        private void CreateTextBoxes()
+        {
+            txtOriginal = CreateTextBox(10, 65, true);  // 読み取り専用
+            txtTranslated = CreateTextBox(10, 250, false); // 編集可能
+        }
+
+        /// <summary>
+        /// ボタンを作成
+        /// </summary>
+        private void CreateButtons()
+        {
+            btnTranslate = CreateButton("翻訳", 330, 10, BtnTranslate_Click);
+            btnDetect = CreateButton("言語検出", 420, 10, BtnDetect_Click, false);
+            btnApiSettings = CreateButton("API設定", 510, 10, BtnApiSettings_Click);
+            btnCopy = CreateButton("コピー", 10, 420, BtnCopy_Click);
+            btnReplace = CreateButton("置き換え", 100, 420, BtnReplace_Click);
+            btnClose = CreateCloseButton("閉じる", 540, 420);
+        }
+
+        /// <summary>
+        /// フォームのレイアウトを設定
+        /// </summary>
+        private void SetupFormLayout()
+        {
+            this.SuspendLayout();
+
+            // コントロールをフォームに追加
+            this.Controls.AddRange(new Control[] {
+                lblOriginal, lblTranslated, lblStatus,
+                comboBoxSourceLang, comboBoxTargetLang,
+                txtOriginal, txtTranslated,
+                btnTranslate, btnDetect, btnApiSettings,
+                btnCopy, btnReplace, btnClose
+            });
+
+            // フォームの基本設定
+            this.ClientSize = new System.Drawing.Size(632, 501);
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.Name = "TranslationDialog";
+            this.StartPosition = FormStartPosition.CenterParent;
+            this.Text = "翻訳";
+
+            this.ResumeLayout(false);
+            this.PerformLayout();
+        }
+        #endregion
+
+        #region UIコントロール作成ヘルパー
+        /// <summary>
+        /// ラベルを作成
+        /// </summary>
+        private Label CreateLabel(string text, int x, int y, int width = 100)
+        {
+            return new Label
+            {
+                Text = text,
+                Location = new System.Drawing.Point(x, y),
+                Size = new System.Drawing.Size(width, 20),
+                AutoSize = false
+            };
+        }
+
+        /// <summary>
+        /// 言語選択用コンボボックスを作成
+        /// </summary>
+        private ComboBox CreateLanguageComboBox(int x, int y, int selectedIndex)
+        {
+            var comboBox = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Location = new System.Drawing.Point(x, y),
+                Size = new System.Drawing.Size(120, 23)
+            };
+
+            comboBox.Items.AddRange(new object[] {
+                "日本語 (JA)",
+                "英語 (EN)"
+            });
+            comboBox.SelectedIndex = selectedIndex;
+
+            return comboBox;
+        }
+
+        /// <summary>
+        /// テキストボックスを作成
+        /// </summary>
+        private TextBox CreateTextBox(int x, int y, bool readOnly)
+        {
+            return new TextBox
+            {
+                Location = new System.Drawing.Point(x, y),
+                Size = new System.Drawing.Size(610, 150),
+                Multiline = true,
+                ReadOnly = readOnly,
+                ScrollBars = ScrollBars.Vertical
+            };
+        }
+
+        /// <summary>
+        /// ボタンを作成
+        /// </summary>
+        private Button CreateButton(string text, int x, int y, EventHandler clickHandler, bool enabled = true)
+        {
+            var button = new Button
+            {
+                Text = text,
+                Location = new System.Drawing.Point(x, y),
+                Size = new System.Drawing.Size(80, 25),
+                Enabled = enabled
+            };
+            button.Click += clickHandler;
+            return button;
+        }
+
+        /// <summary>
+        /// 閉じるボタンを作成
+        /// </summary>
+        private Button CreateCloseButton(string text, int x, int y)
+        {
+            return new Button
+            {
+                Text = text,
+                Location = new System.Drawing.Point(x, y),
+                Size = new System.Drawing.Size(80, 25),
+                DialogResult = DialogResult.Cancel
+            };
+        }
+        #endregion
+
+        #region 初期データ読み込み
+        /// <summary>
+        /// 元のテキストを表示
+        /// </summary>
+        private void LoadOriginalText()
         {
             txtOriginal.Text = originalText;
         }
+        #endregion
 
+        #region イベントハンドラー
+        /// <summary>
+        /// 翻訳ボタンクリック時の処理
+        /// </summary>
         private async void BtnTranslate_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(txtOriginal.Text))
-            {
-                MessageBox.Show("翻訳するテキストがありません。", "翻訳", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            if (!ValidateTranslationInput())
                 return;
-            }
 
-            if (!translationManager.HasApiKey)
-            {
-                MessageBox.Show("DeepL APIキーが設定されていません。", "翻訳", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            string sourceLang = GetSourceLanguage();
-            string targetLang = GetTargetLanguage();
-            if (sourceLang == targetLang)
-            {
-                MessageBox.Show("元言語と翻訳後の言語が同じです。", "翻訳", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-            try
-            {
-                string translated = await translationManager.TranslateAsync(txtOriginal.Text, sourceLang, targetLang);
-                System.Diagnostics.Debug.WriteLine($"[DEBUG] 翻訳結果: {translated}");
-                txtTranslated.Text = translated;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "翻訳エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            await PerformTranslation();
         }
 
+        /// <summary>
+        /// 言語検出ボタンクリック時の処理
+        /// </summary>
         private async void BtnDetect_Click(object sender, EventArgs e)
         {
-            if (!translationManager.HasApiKey)
-            {
-                MessageBox.Show("DeepL APIキーが設定されていません。\n設定からAPIキーを入力してください。", "エラー",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            if (!ValidateDetectionInput())
                 return;
-            }
 
-            if (string.IsNullOrWhiteSpace(txtOriginal.Text))
-            {
-                MessageBox.Show("言語を検出するテキストがありません。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            btnDetect.Enabled = false;
-            lblStatus.Text = "言語検出中...";
-            Application.DoEvents();
-
-            try
-            {
-                var detectedLang = await translationManager.DetectLanguageAsync(txtOriginal.Text);
-                var langName = GetLanguageName(detectedLang);
-                lblStatus.Text = $"検出された言語: {langName} ({detectedLang})";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"言語検出中にエラーが発生しました: {ex.Message}", "エラー",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                lblStatus.Text = "言語検出中にエラーが発生しました";
-            }
-            finally
-            {
-                btnDetect.Enabled = true;
-            }
+            await PerformLanguageDetection();
         }
 
+        /// <summary>
+        /// コピーボタンクリック時の処理
+        /// </summary>
         private void BtnCopy_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(txtTranslated.Text))
-            {
-                Clipboard.SetText(txtTranslated.Text);
-                MessageBox.Show("翻訳結果をクリップボードにコピーしました。", "コピー",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+            if (string.IsNullOrEmpty(txtTranslated.Text))
+                return;
+
+            Clipboard.SetText(txtTranslated.Text);
+            ShowInformationMessage("翻訳結果をクリップボードにコピーしました。", "コピー");
         }
 
+        /// <summary>
+        /// 置き換えボタンクリック時の処理
+        /// </summary>
         private void BtnReplace_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(txtTranslated.Text))
-            {
-                this.DialogResult = DialogResult.OK;
-                this.Close();
-            }
+            if (string.IsNullOrEmpty(txtTranslated.Text))
+                return;
+
+            this.DialogResult = DialogResult.OK;
+            this.Close();
         }
 
+        /// <summary>
+        /// API設定ボタンクリック時の処理
+        /// </summary>
         private void BtnApiSettings_Click(object sender, EventArgs e)
         {
             using (var dialog = new ApiSettingsDialog(translationManager))
@@ -284,55 +277,209 @@ namespace PromptMemoApp
                 dialog.ShowDialog(this);
             }
         }
+        #endregion
 
-        private string GetTargetLanguageCode()
+        #region バリデーション
+        /// <summary>
+        /// 翻訳入力の妥当性をチェック
+        /// </summary>
+        /// <returns>妥当な場合はtrue</returns>
+        private bool ValidateTranslationInput()
         {
-            var selected = (comboBoxTargetLang.SelectedItem != null) ? comboBoxTargetLang.SelectedItem.ToString() : null;
-            if (selected == null) return "EN";
-
-            var parts = selected.Split('(');
-            if (parts.Length > 1)
+            if (string.IsNullOrEmpty(txtOriginal.Text))
             {
-                return parts[1].TrimEnd(')');
+                ShowWarningMessage("翻訳するテキストがありません。", "翻訳");
+                return false;
             }
-            return "EN";
+
+            if (!translationManager.HasApiKey)
+            {
+                ShowWarningMessage("DeepL APIキーが設定されていません。", "翻訳");
+                return false;
+            }
+
+            if (GetSourceLanguage() == GetTargetLanguage())
+            {
+                ShowInformationMessage("元言語と翻訳後の言語が同じです。", "翻訳");
+                return false;
+            }
+
+            return true;
         }
 
-        private string GetLanguageName(string langCode)
+        /// <summary>
+        /// 言語検出入力の妥当性をチェック
+        /// </summary>
+        /// <returns>妥当な場合はtrue</returns>
+        private bool ValidateDetectionInput()
         {
-            switch (langCode)
+            if (!translationManager.HasApiKey)
             {
-                case "EN": return "英語";
-                case "DE": return "ドイツ語";
-                case "FR": return "フランス語";
-                case "ES": return "スペイン語";
-                case "IT": return "イタリア語";
-                case "PT": return "ポルトガル語";
-                case "RU": return "ロシア語";
-                case "ZH": return "中国語";
-                case "KO": return "韓国語";
-                case "JA": return "日本語";
-                default: return langCode;
+                ShowWarningMessage("DeepL APIキーが設定されていません。\n設定からAPIキーを入力してください。", "エラー");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtOriginal.Text))
+            {
+                ShowWarningMessage("言語を検出するテキストがありません。", "エラー");
+                return false;
+            }
+
+            return true;
+        }
+        #endregion
+
+        #region 翻訳・言語検出処理
+        /// <summary>
+        /// 翻訳を実行
+        /// </summary>
+        private async Task PerformTranslation()
+        {
+            try
+            {
+                string sourceLang = GetSourceLanguage();
+                string targetLang = GetTargetLanguage();
+
+                string translatedText = await translationManager.TranslateAsync(
+                    txtOriginal.Text, sourceLang, targetLang);
+
+                txtTranslated.Text = translatedText;
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] 翻訳結果: {translatedText}");
+            }
+            catch (Exception ex)
+            {
+                ShowErrorMessage(ex.Message, "翻訳エラー");
             }
         }
 
+        /// <summary>
+        /// 言語検出を実行
+        /// </summary>
+        private async Task PerformLanguageDetection()
+        {
+            SetDetectionInProgress(true);
+
+            try
+            {
+                var detectedLanguage = await translationManager.DetectLanguageAsync(txtOriginal.Text);
+                var languageName = GetLanguageName(detectedLanguage);
+                lblStatus.Text = $"検出された言語: {languageName} ({detectedLanguage})";
+            }
+            catch (Exception ex)
+            {
+                ShowErrorMessage($"言語検出中にエラーが発生しました: {ex.Message}", "エラー");
+                lblStatus.Text = "言語検出中にエラーが発生しました";
+            }
+            finally
+            {
+                SetDetectionInProgress(false);
+            }
+        }
+
+        /// <summary>
+        /// 言語検出の進行状態を設定
+        /// </summary>
+        /// <param name="inProgress">検出中の場合はtrue</param>
+        private void SetDetectionInProgress(bool inProgress)
+        {
+            btnDetect.Enabled = !inProgress;
+            lblStatus.Text = inProgress ? "言語検出中..." : "準備完了";
+            Application.DoEvents();
+        }
+        #endregion
+
+        #region 言語関連ユーティリティ
+        /// <summary>
+        /// 元言語のコードを取得
+        /// </summary>
+        /// <returns>言語コード</returns>
+        public string GetSourceLanguage()
+        {
+            var selectedText = comboBoxSourceLang.SelectedItem?.ToString();
+            return selectedText?.Contains("日本語") == true ? "JA" : "EN";
+        }
+
+        /// <summary>
+        /// 翻訳先言語のコードを取得
+        /// </summary>
+        /// <returns>言語コード</returns>
+        public string GetTargetLanguage()
+        {
+            var selectedText = comboBoxTargetLang.SelectedItem?.ToString();
+            return selectedText?.Contains("日本語") == true ? "JA" : "EN";
+        }
+
+        /// <summary>
+        /// 言語コードから言語名を取得
+        /// </summary>
+        /// <param name="languageCode">言語コード</param>
+        /// <returns>言語名</returns>
+        private string GetLanguageName(string languageCode)
+        {
+            return languageCode switch
+            {
+                "EN" => "英語",
+                "DE" => "ドイツ語",
+                "FR" => "フランス語",
+                "ES" => "スペイン語",
+                "IT" => "イタリア語",
+                "PT" => "ポルトガル語",
+                "RU" => "ロシア語",
+                "ZH" => "中国語",
+                "KO" => "韓国語",
+                "JA" => "日本語",
+                _ => languageCode
+            };
+        }
+        #endregion
+
+        #region パブリックメソッド
+        /// <summary>
+        /// 翻訳されたテキストを取得
+        /// </summary>
+        /// <returns>翻訳されたテキスト</returns>
         public string GetTranslatedText()
         {
             return txtTranslated.Text;
         }
+        #endregion
 
-        public string GetSourceLanguage()
+        #region メッセージ表示ユーティリティ
+        /// <summary>
+        /// 情報メッセージを表示
+        /// </summary>
+        /// <param name="message">メッセージ</param>
+        /// <param name="title">タイトル</param>
+        private void ShowInformationMessage(string message, string title)
         {
-            var selected = (comboBoxSourceLang.SelectedItem != null) ? comboBoxSourceLang.SelectedItem.ToString() : null;
-            if (selected == null) return "JA";
-            return selected.Contains("日本語") ? "JA" : "EN";
+            MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        public string GetTargetLanguage()
+        /// <summary>
+        /// 警告メッセージを表示
+        /// </summary>
+        /// <param name="message">メッセージ</param>
+        /// <param name="title">タイトル</param>
+        private void ShowWarningMessage(string message, string title)
         {
-            var selected = (comboBoxTargetLang.SelectedItem != null) ? comboBoxTargetLang.SelectedItem.ToString() : null;
-            if (selected == null) return "EN";
-            return selected.Contains("日本語") ? "JA" : "EN";
+            MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
+
+        /// <summary>
+        /// エラーメッセージを表示
+        /// </summary>
+        /// <param name="message">メッセージ</param>
+        /// <param name="title">タイトル</param>
+        private void ShowErrorMessage(string message, string title)
+        {
+            MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        #endregion
+
+        #region 削除された不要なメソッド
+        // 以下のメソッドは使用されていないか、重複していたため削除しました：
+        // - GetTargetLanguageCode() - GetTargetLanguage()で代替
+        // - LoadText() - LoadOriginalText()で代替して名前を明確化
+        #endregion
     }
 }
