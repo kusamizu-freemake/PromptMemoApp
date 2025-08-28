@@ -7,6 +7,8 @@ namespace PromptMemoApp
     public partial class TranslationDialog : Form
     {
         private TranslationManager translationManager;
+        private Label lblOriginal;
+        private Label lblTranslated;
         private string originalText;
 
         public TranslationDialog(TranslationManager translationManager, string text)
@@ -19,62 +21,48 @@ namespace PromptMemoApp
 
         private void InitializeComponent()
         {
+            // --- 元のテキストラベルと元言語ComboBox ---
             this.lblOriginal = new System.Windows.Forms.Label();
-            this.comboBoxSourceLang = new System.Windows.Forms.ComboBox();
-            this.lblTranslated = new System.Windows.Forms.Label();
-            this.comboBoxTargetLang = new System.Windows.Forms.ComboBox();
-            this.txtOriginal = new System.Windows.Forms.TextBox();
-            this.txtTranslated = new System.Windows.Forms.TextBox();
-            this.btnTranslate = new System.Windows.Forms.Button();
-            this.btnDetect = new System.Windows.Forms.Button();
-            this.btnApiSettings = new System.Windows.Forms.Button();
-            this.btnCopy = new System.Windows.Forms.Button();
-            this.btnReplace = new System.Windows.Forms.Button();
-            this.btnClose = new System.Windows.Forms.Button();
-            this.lblStatus = new System.Windows.Forms.Label();
-            this.SuspendLayout();
-            // 
-            // lblOriginal
-            // 
             this.lblOriginal.Location = new System.Drawing.Point(10, 40);
             this.lblOriginal.Name = "lblOriginal";
             this.lblOriginal.Size = new System.Drawing.Size(100, 20);
             this.lblOriginal.TabIndex = 5;
             this.lblOriginal.Text = "元のテキスト：";
-            // 
-            // comboBoxSourceLang
-            // 
+
+            this.comboBoxSourceLang = new System.Windows.Forms.ComboBox();
             this.comboBoxSourceLang.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxSourceLang.Items.AddRange(new object[] {
-            "日本語 (JA)",
-            "英語 (EN)"});
-            this.comboBoxSourceLang.Location = new System.Drawing.Point(116, 36);
+        "日本語 (JA)",
+        "英語 (EN)"
+    });
+            this.comboBoxSourceLang.Location = new System.Drawing.Point(115, 40); // ← lblOriginalの右隣に配置
             this.comboBoxSourceLang.Name = "comboBoxSourceLang";
             this.comboBoxSourceLang.Size = new System.Drawing.Size(120, 23);
             this.comboBoxSourceLang.TabIndex = 6;
-            this.comboBoxSourceLang.SelectedIndexChanged += new System.EventHandler(this.comboBoxSourceLang_SelectedIndexChanged);
-            // 
-            // lblTranslated
-            // 
+            this.comboBoxSourceLang.SelectedIndex = 0;
+
+            // --- 翻訳結果ラベルと翻訳後言語ComboBox ---
+            this.lblTranslated = new System.Windows.Forms.Label();
             this.lblTranslated.Location = new System.Drawing.Point(10, 225);
             this.lblTranslated.Name = "lblTranslated";
             this.lblTranslated.Size = new System.Drawing.Size(100, 20);
             this.lblTranslated.TabIndex = 7;
             this.lblTranslated.Text = "翻訳結果：";
-            // 
-            // comboBoxTargetLang
-            // 
+
+            this.comboBoxTargetLang = new System.Windows.Forms.ComboBox();
             this.comboBoxTargetLang.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxTargetLang.Items.AddRange(new object[] {
-            "日本語 (JA)",
-            "英語 (EN)"});
-            this.comboBoxTargetLang.Location = new System.Drawing.Point(116, 221);
+        "日本語 (JA)",
+        "英語 (EN)"
+    });
+            this.comboBoxTargetLang.Location = new System.Drawing.Point(115, 225); // ← lblTranslatedの右隣に配置
             this.comboBoxTargetLang.Name = "comboBoxTargetLang";
             this.comboBoxTargetLang.Size = new System.Drawing.Size(120, 23);
             this.comboBoxTargetLang.TabIndex = 8;
-            // 
-            // txtOriginal
-            // 
+            this.comboBoxTargetLang.SelectedIndex = 1;
+
+            // --- テキストボックスの位置も右にずらす ---
+            this.txtOriginal = new System.Windows.Forms.TextBox();
             this.txtOriginal.Location = new System.Drawing.Point(10, 65);
             this.txtOriginal.Multiline = true;
             this.txtOriginal.Name = "txtOriginal";
@@ -82,15 +70,27 @@ namespace PromptMemoApp
             this.txtOriginal.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.txtOriginal.Size = new System.Drawing.Size(610, 150);
             this.txtOriginal.TabIndex = 9;
-            // 
-            // txtTranslated
-            // 
+
+            this.txtTranslated = new System.Windows.Forms.TextBox();
             this.txtTranslated.Location = new System.Drawing.Point(10, 250);
             this.txtTranslated.Multiline = true;
             this.txtTranslated.Name = "txtTranslated";
             this.txtTranslated.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.txtTranslated.Size = new System.Drawing.Size(610, 150);
             this.txtTranslated.TabIndex = 10;
+
+            this.btnTranslate = new System.Windows.Forms.Button();
+            this.btnDetect = new System.Windows.Forms.Button();
+            this.btnApiSettings = new System.Windows.Forms.Button();
+            this.lblOriginal = new System.Windows.Forms.Label();
+            this.txtOriginal = new System.Windows.Forms.TextBox();
+            this.lblTranslated = new System.Windows.Forms.Label();
+            this.txtTranslated = new System.Windows.Forms.TextBox();
+            this.btnCopy = new System.Windows.Forms.Button();
+            this.btnReplace = new System.Windows.Forms.Button();
+            this.btnClose = new System.Windows.Forms.Button();
+            this.lblStatus = new System.Windows.Forms.Label();
+            this.SuspendLayout();
             // 
             // btnTranslate
             // 
@@ -103,12 +103,12 @@ namespace PromptMemoApp
             // 
             // btnDetect
             // 
-            this.btnDetect.Enabled = false;
             this.btnDetect.Location = new System.Drawing.Point(420, 10);
             this.btnDetect.Name = "btnDetect";
             this.btnDetect.Size = new System.Drawing.Size(80, 25);
             this.btnDetect.TabIndex = 3;
             this.btnDetect.Text = "言語検出";
+            this.btnDetect.Enabled = false;
             this.btnDetect.Click += new System.EventHandler(this.BtnDetect_Click);
             // 
             // btnApiSettings
@@ -120,12 +120,47 @@ namespace PromptMemoApp
             this.btnApiSettings.Text = "API設定";
             this.btnApiSettings.Click += new System.EventHandler(this.BtnApiSettings_Click);
             // 
+            // lblOriginal
+            // 
+            this.lblOriginal.Location = new System.Drawing.Point(10, 40);
+            this.lblOriginal.Name = "lblOriginal";
+            this.lblOriginal.Size = new System.Drawing.Size(100, 20);
+            this.lblOriginal.TabIndex = 5;
+            this.lblOriginal.Text = "元のテキスト：";
+            // 
+            // txtOriginal
+            // 
+            this.txtOriginal.Location = new System.Drawing.Point(10, 65);
+            this.txtOriginal.Multiline = true;
+            this.txtOriginal.Name = "txtOriginal";
+            this.txtOriginal.ReadOnly = true;
+            this.txtOriginal.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtOriginal.Size = new System.Drawing.Size(610, 150);
+            this.txtOriginal.TabIndex = 6;
+            // 
+            // lblTranslated
+            // 
+            this.lblTranslated.Location = new System.Drawing.Point(10, 225);
+            this.lblTranslated.Name = "lblTranslated";
+            this.lblTranslated.Size = new System.Drawing.Size(100, 20);
+            this.lblTranslated.TabIndex = 7;
+            this.lblTranslated.Text = "翻訳結果：";
+            // 
+            // txtTranslated
+            // 
+            this.txtTranslated.Location = new System.Drawing.Point(10, 250);
+            this.txtTranslated.Multiline = true;
+            this.txtTranslated.Name = "txtTranslated";
+            this.txtTranslated.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtTranslated.Size = new System.Drawing.Size(610, 150);
+            this.txtTranslated.TabIndex = 8;
+            // 
             // btnCopy
             // 
             this.btnCopy.Location = new System.Drawing.Point(10, 420);
             this.btnCopy.Name = "btnCopy";
             this.btnCopy.Size = new System.Drawing.Size(80, 25);
-            this.btnCopy.TabIndex = 11;
+            this.btnCopy.TabIndex = 9;
             this.btnCopy.Text = "コピー";
             this.btnCopy.Click += new System.EventHandler(this.BtnCopy_Click);
             // 
@@ -134,7 +169,7 @@ namespace PromptMemoApp
             this.btnReplace.Location = new System.Drawing.Point(100, 420);
             this.btnReplace.Name = "btnReplace";
             this.btnReplace.Size = new System.Drawing.Size(80, 25);
-            this.btnReplace.TabIndex = 12;
+            this.btnReplace.TabIndex = 10;
             this.btnReplace.Text = "置き換え";
             this.btnReplace.Click += new System.EventHandler(this.BtnReplace_Click);
             // 
@@ -144,7 +179,7 @@ namespace PromptMemoApp
             this.btnClose.Location = new System.Drawing.Point(540, 420);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(80, 25);
-            this.btnClose.TabIndex = 13;
+            this.btnClose.TabIndex = 11;
             this.btnClose.Text = "閉じる";
             // 
             // lblStatus
@@ -152,8 +187,8 @@ namespace PromptMemoApp
             this.lblStatus.Location = new System.Drawing.Point(10, 450);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(610, 20);
-            this.lblStatus.TabIndex = 14;
-            this.lblStatus.Text = "翻訳する言語を選択して「翻訳」ボタンをクリックしてください。";
+            this.lblStatus.TabIndex = 12;
+            this.lblStatus.Text = "翻訳する言語を選択して「翻訳」ボタンをクリックしてください。初回使用時は「API設定」ボタンでDeepL APIキーを設定してください。";
             // 
             // TranslationDialog
             // 
@@ -170,7 +205,6 @@ namespace PromptMemoApp
             this.Controls.Add(this.btnTranslate);
             this.Controls.Add(this.comboBoxSourceLang);
             this.Controls.Add(this.comboBoxTargetLang);
-            this.Controls.Add(this.lblStatus);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -182,7 +216,7 @@ namespace PromptMemoApp
 
         }
 
-        private ComboBox comboBoxSourceLang;
+        private ComboBox comboBoxSourceLang; // 追加
         private ComboBox comboBoxTargetLang;
         private Button btnTranslate;
         private Button btnDetect;
@@ -193,8 +227,6 @@ namespace PromptMemoApp
         private Button btnReplace;
         private Button btnClose;
         private Label lblStatus;
-        private Label lblOriginal;
-        private Label lblTranslated;
 
         private void LoadText()
         {
@@ -215,8 +247,8 @@ namespace PromptMemoApp
                 return;
             }
 
-            string sourceLang = GetSourceLanguage();
-            string targetLang = GetTargetLanguage();
+            string sourceLang = GetSourceLanguage(); // "JA" or "EN"
+            string targetLang = GetTargetLanguage(); // "JA" or "EN"
             if (sourceLang == targetLang)
             {
                 MessageBox.Show("元言語と翻訳後の言語が同じです。", "翻訳", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -225,7 +257,7 @@ namespace PromptMemoApp
             try
             {
                 string translated = await translationManager.TranslateAsync(txtOriginal.Text, sourceLang, targetLang);
-                System.Diagnostics.Debug.WriteLine($"[DEBUG] 翻訳結果: {translated}");
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] 翻訳結果: {translated}"); // ← 追加
                 txtTranslated.Text = translated;
             }
             catch (Exception ex)
@@ -315,17 +347,28 @@ namespace PromptMemoApp
         {
             switch (langCode)
             {
-                case "EN": return "英語";
-                case "DE": return "ドイツ語";
-                case "FR": return "フランス語";
-                case "ES": return "スペイン語";
-                case "IT": return "イタリア語";
-                case "PT": return "ポルトガル語";
-                case "RU": return "ロシア語";
-                case "ZH": return "中国語";
-                case "KO": return "韓国語";
-                case "JA": return "日本語";
-                default: return langCode;
+                case "EN":
+                    return "英語";
+                case "DE":
+                    return "ドイツ語";
+                case "FR":
+                    return "フランス語";
+                case "ES":
+                    return "スペイン語";
+                case "IT":
+                    return "イタリア語";
+                case "PT":
+                    return "ポルトガル語";
+                case "RU":
+                    return "ロシア語";
+                case "ZH":
+                    return "中国語";
+                case "KO":
+                    return "韓国語";
+                case "JA":
+                    return "日本語";
+                default:
+                    return langCode;
             }
         }
 
@@ -346,11 +389,6 @@ namespace PromptMemoApp
             var selected = (comboBoxTargetLang.SelectedItem != null) ? comboBoxTargetLang.SelectedItem.ToString() : null;
             if (selected == null) return "EN";
             return selected.Contains("日本語") ? "JA" : "EN";
-        }
-
-        private void comboBoxSourceLang_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
         }
     }
 }
