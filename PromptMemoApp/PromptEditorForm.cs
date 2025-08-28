@@ -4,7 +4,6 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -12,33 +11,67 @@ namespace PromptMemoApp
 {
     public partial class PromptEditorForm : Form
     {
-        private string baseDirectory = Path.Combine(Application.StartupPath, "prompts");
+        #region フィールド
+        private readonly string baseDirectory = Path.Combine(Application.StartupPath, "prompts");
         private string currentCategory = "";
         private string currentFilePath = "";
-        private Dictionary<Keys, Action> shortcuts = new Dictionary<Keys, Action>();
+
+        // 各種マネージャー
         private FavoritesManager favoritesManager;
         private HistoryManager historyManager;
         private TranslationManager translationManager;
 
-        // 並び替え機能用のフィールド
+        // ショートカット機能
+        private Dictionary<Keys, Action> shortcuts = new Dictionary<Keys, Action>();
+
+        // 並び替え機能
         private SortOrder currentSortOrder = SortOrder.Ascending;
         private string currentSortField = "Name";
         private List<FileInfo> currentFileList = new List<FileInfo>();
+        #endregion
 
-        // 統計情報用
-        private Dictionary<string, int> categoryStats = new Dictionary<string, int>();
-
+        #region 初期化
         public PromptEditorForm()
         {
             InitializeComponent();
-            InitializeData();
-            InitializeShortcuts();
-            InitializeManagers();
+            InitializeApplication();
         }
 
+        /// <summary>
+        /// アプリケーション全体の初期化を実行
+        /// </summary>
+        private void InitializeApplication()
+        {
+            CreateDirectoryIfNotExists();
+            InitializeManagers();
+            InitializeShortcuts();
+            LoadCategories();
+        }
+
+        /// <summary>
+        /// ベースディレクトリが存在しない場合は作成
+        /// </summary>
+        private void CreateDirectoryIfNotExists()
+        {
+            if (!Directory.Exists(baseDirectory))
+                Directory.CreateDirectory(baseDirectory);
+        }
+
+        /// <summary>
+        /// 各種マネージャーを初期化
+        /// </summary>
+        private void InitializeManagers()
+        {
+            favoritesManager = new FavoritesManager(baseDirectory);
+            historyManager = new HistoryManager(baseDirectory);
+            translationManager = new TranslationManager();
+        }
+
+        /// <summary>
+        /// キーボードショートカットを設定
+        /// </summary>
         private void InitializeShortcuts()
         {
-            // デフォルトのショートカットを設定
             shortcuts[Keys.Control | Keys.N] = () => btnNew_Click(null, null);
             shortcuts[Keys.Control | Keys.S] = () => btnSave_Click(null, null);
             shortcuts[Keys.Control | Keys.D] = () => btnDelete_Click(null, null);
@@ -51,13 +84,6 @@ namespace PromptMemoApp
             shortcuts[Keys.Control | Keys.H] = () => ShowHistoryDialog();
         }
 
-        private void InitializeManagers()
-        {
-            favoritesManager = new FavoritesManager(baseDirectory);
-            historyManager = new HistoryManager(baseDirectory);
-            translationManager = new TranslationManager();
-        }
-
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             if (shortcuts.ContainsKey(keyData))
@@ -67,72 +93,118 @@ namespace PromptMemoApp
             }
             return base.ProcessCmdKey(ref msg, keyData);
         }
+        #endregion
 
-        private void InitializeData()
-        {
-            if (!Directory.Exists(baseDirectory))
-                Directory.CreateDirectory(baseDirectory);
-
-            LoadCategories();
-        }
-
+        #region カテゴリ管理
+        /// <summary>
+        /// すべてのカテゴリを読み込んでUIに表示
+        /// </summary>
         private void LoadCategories()
         {
             treeViewCategories.Nodes.Clear();
             comboBoxCategories.Items.Clear();
 
-            var dirs = Directory.GetDirectories(baseDirectory);
-            foreach (var dir in dirs)
+            var directories = Directory.GetDirectories(baseDirectory);
+            foreach (var directory in directories)
             {
-                string category = Path.GetFileName(dir);
-                TreeNode node = new TreeNode(category);
-                treeViewCategories.Nodes.Add(node);
-                comboBoxCategories.Items.Add(category);
+                string categoryName = Path.GetFileName(directory);
+                AddCategoryToUI(categoryName);
             }
 
+            SelectFirstCategoryIfExists();
+        }
+
+        /// <summary>
+        /// カテゴリをUIに追加
+        /// </summary>
+        private void AddCategoryToUI(string categoryName)
+        {
+            TreeNode node = new TreeNode(categoryName);
+            treeViewCategories.Nodes.Add(node);
+            comboBoxCategories.Items.Add(categoryName);
+        }
+
+        /// <summary>
+        /// 最初のカテゴリが存在する場合は選択
+        /// </summary>
+        private void SelectFirstCategoryIfExists()
+        {
             if (treeViewCategories.Nodes.Count > 0)
                 treeViewCategories.SelectedNode = treeViewCategories.Nodes[0];
         }
+        #endregion
 
-        // listBoxFiles関連の処理をlistViewFilesに置き換え
-        // LoadFiles, SortAndDisplayFiles, listBoxFiles_SelectedIndexChanged, UpdateFavoriteButton などを修正
-
+        #region ファイル管理
+        /// <summary>
+        /// 指定されたカテゴリのファイル一覧を読み込み
+        /// </summary>
         private void LoadFiles(string category)
         {
             listViewFiles.Items.Clear();
             currentFileList.Clear();
-            string dirPath = Path.Combine(baseDirectory, category);
-            if (!Directory.Exists(dirPath)) return;
 
-            var files = Directory.GetFiles(dirPath, "*.txt");
-            foreach (var file in files)
+            string directoryPath = Path.Combine(baseDirectory, category);
+            if (!Directory.Exists(directoryPath)) return;
+
+            var textFiles = Directory.GetFiles(directoryPath, "*.txt");
+            foreach (var file in textFiles)
             {
-                var fileInfo = new FileInfo(file);
-                currentFileList.Add(fileInfo);
+                currentFileList.Add(new FileInfo(file));
             }
+
             SortAndDisplayFiles();
         }
 
+        /// <summary>
+        /// ファイル一覧をソートしてUIに表示
+        /// </summary>
         private void SortAndDisplayFiles()
         {
+            var sortedFiles = GetSortedFiles();
+            DisplayFilesInListView(sortedFiles);
+        }
+
+        /// <summary>
+        /// 現在の設定に基づいてファイルをソート
+        /// </summary>
+        private IEnumerable<FileInfo> GetSortedFiles()
+        {
             var sortedFiles = currentFileList.AsEnumerable();
+
             switch (currentSortField)
             {
                 case "Name":
-                    sortedFiles = currentSortOrder == SortOrder.Ascending ? sortedFiles.OrderBy(f => f.Name) : sortedFiles.OrderByDescending(f => f.Name);
+                    sortedFiles = currentSortOrder == SortOrder.Ascending
+                        ? sortedFiles.OrderBy(f => f.Name)
+                        : sortedFiles.OrderByDescending(f => f.Name);
                     break;
                 case "Created":
-                    sortedFiles = currentSortOrder == SortOrder.Ascending ? sortedFiles.OrderBy(f => f.CreationTime) : sortedFiles.OrderByDescending(f => f.CreationTime);
+                    sortedFiles = currentSortOrder == SortOrder.Ascending
+                        ? sortedFiles.OrderBy(f => f.CreationTime)
+                        : sortedFiles.OrderByDescending(f => f.CreationTime);
                     break;
                 case "Modified":
-                    sortedFiles = currentSortOrder == SortOrder.Ascending ? sortedFiles.OrderBy(f => f.LastWriteTime) : sortedFiles.OrderByDescending(f => f.LastWriteTime);
+                    sortedFiles = currentSortOrder == SortOrder.Ascending
+                        ? sortedFiles.OrderBy(f => f.LastWriteTime)
+                        : sortedFiles.OrderByDescending(f => f.LastWriteTime);
                     break;
                 case "Size":
-                    sortedFiles = currentSortOrder == SortOrder.Ascending ? sortedFiles.OrderBy(f => f.Length) : sortedFiles.OrderByDescending(f => f.Length);
+                    sortedFiles = currentSortOrder == SortOrder.Ascending
+                        ? sortedFiles.OrderBy(f => f.Length)
+                        : sortedFiles.OrderByDescending(f => f.Length);
                     break;
             }
+
+            return sortedFiles;
+        }
+
+        /// <summary>
+        /// ファイル一覧をListViewに表示
+        /// </summary>
+        private void DisplayFilesInListView(IEnumerable<FileInfo> files)
+        {
             listViewFiles.Items.Clear();
-            foreach (var file in sortedFiles)
+            foreach (var file in files)
             {
                 var item = new ListViewItem(new string[] {
                     Path.GetFileNameWithoutExtension(file.Name),
@@ -144,12 +216,17 @@ namespace PromptMemoApp
             }
         }
 
+        /// <summary>
+        /// ファイルのソート順を変更
+        /// </summary>
         public void SortFiles(string sortField)
         {
             if (currentSortField == sortField)
             {
-                // 同じフィールドでソートする場合は順序を反転
-                currentSortOrder = currentSortOrder == SortOrder.Ascending ? SortOrder.Descending : SortOrder.Ascending;
+                // 同じフィールドの場合は昇順・降順を切り替え
+                currentSortOrder = currentSortOrder == SortOrder.Ascending
+                    ? SortOrder.Descending
+                    : SortOrder.Ascending;
             }
             else
             {
@@ -159,46 +236,17 @@ namespace PromptMemoApp
 
             SortAndDisplayFiles();
         }
+        #endregion
 
-        // エクスポート機能
+        #region エクスポート・インポート
+        /// <summary>
+        /// データをJSONファイルにエクスポート
+        /// </summary>
         public void ExportData(string exportPath)
         {
             try
             {
-                var exportData = new ExportData
-                {
-                    Categories = new List<CategoryData>()
-                };
-
-                var categories = Directory.GetDirectories(baseDirectory);
-                foreach (var categoryPath in categories)
-                {
-                    var categoryName = Path.GetFileName(categoryPath);
-                    var categoryData = new CategoryData
-                    {
-                        Name = categoryName,
-                        Files = new List<FileData>()
-                    };
-
-                    var files = Directory.GetFiles(categoryPath, "*.txt");
-                    foreach (var filePath in files)
-                    {
-                        var fileName = Path.GetFileNameWithoutExtension(filePath);
-                        var content = File.ReadAllText(filePath);
-                        var fileInfo = new FileInfo(filePath);
-
-                        categoryData.Files.Add(new FileData
-                        {
-                            Name = fileName,
-                            Content = content,
-                            Created = fileInfo.CreationTime,
-                            Modified = fileInfo.LastWriteTime
-                        });
-                    }
-
-                    exportData.Categories.Add(categoryData);
-                }
-
+                var exportData = CreateExportData();
                 var json = JsonSerializer.Serialize(exportData, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(exportPath, json);
 
@@ -207,12 +255,73 @@ namespace PromptMemoApp
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"エクスポート中にエラーが発生しました: {ex.Message}", "エラー",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ShowErrorMessage("エクスポート中にエラーが発生しました", ex.Message);
             }
         }
 
-        // インポート機能
+        /// <summary>
+        /// エクスポート用のデータオブジェクトを作成
+        /// </summary>
+        private ExportData CreateExportData()
+        {
+            var exportData = new ExportData
+            {
+                Categories = new List<CategoryData>()
+            };
+
+            var categories = Directory.GetDirectories(baseDirectory);
+            foreach (var categoryPath in categories)
+            {
+                var categoryData = CreateCategoryData(categoryPath);
+                exportData.Categories.Add(categoryData);
+            }
+
+            return exportData;
+        }
+
+        /// <summary>
+        /// カテゴリデータを作成
+        /// </summary>
+        private CategoryData CreateCategoryData(string categoryPath)
+        {
+            var categoryName = Path.GetFileName(categoryPath);
+            var categoryData = new CategoryData
+            {
+                Name = categoryName,
+                Files = new List<FileData>()
+            };
+
+            var files = Directory.GetFiles(categoryPath, "*.txt");
+            foreach (var filePath in files)
+            {
+                var fileData = CreateFileData(filePath);
+                categoryData.Files.Add(fileData);
+            }
+
+            return categoryData;
+        }
+
+        /// <summary>
+        /// ファイルデータを作成
+        /// </summary>
+        private FileData CreateFileData(string filePath)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(filePath);
+            var content = File.ReadAllText(filePath);
+            var fileInfo = new FileInfo(filePath);
+
+            return new FileData
+            {
+                Name = fileName,
+                Content = content,
+                Created = fileInfo.CreationTime,
+                Modified = fileInfo.LastWriteTime
+            };
+        }
+
+        /// <summary>
+        /// JSONファイルからデータをインポート
+        /// </summary>
         public void ImportData(string importPath)
         {
             try
@@ -220,76 +329,86 @@ namespace PromptMemoApp
                 var json = File.ReadAllText(importPath);
                 var importData = JsonSerializer.Deserialize<ExportData>(json);
 
-                if (importData?.Categories == null)
+                if (!IsValidImportData(importData))
                 {
                     MessageBox.Show("インポートファイルの形式が正しくありません。", "エラー",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
-                foreach (var categoryData in importData.Categories)
-                {
-                    var categoryPath = Path.Combine(baseDirectory, categoryData.Name);
-                    if (!Directory.Exists(categoryPath))
-                    {
-                        Directory.CreateDirectory(categoryPath);
-                    }
-
-                    foreach (var fileData in categoryData.Files)
-                    {
-                        var filePath = Path.Combine(categoryPath, fileData.Name + ".txt");
-                        File.WriteAllText(filePath, fileData.Content);
-
-                        // ファイルの作成日時と更新日時を設定
-                        File.SetCreationTime(filePath, fileData.Created);
-                        File.SetLastWriteTime(filePath, fileData.Modified);
-                    }
-                }
-
+                ImportCategories(importData.Categories);
                 LoadCategories();
+
                 MessageBox.Show("データのインポートが完了しました。", "インポート",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"インポート中にエラーが発生しました: {ex.Message}", "エラー",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ShowErrorMessage("インポート中にエラーが発生しました", ex.Message);
             }
         }
 
-        // 統計情報の取得
+        /// <summary>
+        /// インポートデータの妥当性チェック
+        /// </summary>
+        private bool IsValidImportData(ExportData importData)
+        {
+            return importData?.Categories != null;
+        }
+
+        /// <summary>
+        /// カテゴリデータをインポート
+        /// </summary>
+        private void ImportCategories(List<CategoryData> categories)
+        {
+            foreach (var categoryData in categories)
+            {
+                ImportSingleCategory(categoryData);
+            }
+        }
+
+        /// <summary>
+        /// 単一カテゴリをインポート
+        /// </summary>
+        private void ImportSingleCategory(CategoryData categoryData)
+        {
+            var categoryPath = Path.Combine(baseDirectory, categoryData.Name);
+            if (!Directory.Exists(categoryPath))
+            {
+                Directory.CreateDirectory(categoryPath);
+            }
+
+            foreach (var fileData in categoryData.Files)
+            {
+                ImportSingleFile(categoryPath, fileData);
+            }
+        }
+
+        /// <summary>
+        /// 単一ファイルをインポート
+        /// </summary>
+        private void ImportSingleFile(string categoryPath, FileData fileData)
+        {
+            var filePath = Path.Combine(categoryPath, fileData.Name + ".txt");
+            File.WriteAllText(filePath, fileData.Content);
+
+            // ファイルの作成日時と更新日時を設定
+            File.SetCreationTime(filePath, fileData.Created);
+            File.SetLastWriteTime(filePath, fileData.Modified);
+        }
+        #endregion
+
+        #region 統計情報
+        /// <summary>
+        /// アプリケーションの統計情報を取得
+        /// </summary>
         public Dictionary<string, object> GetStatistics()
         {
             var stats = new Dictionary<string, object>();
 
             try
             {
-                var categories = Directory.GetDirectories(baseDirectory);
-                int totalFiles = 0;
-                long totalSize = 0;
-                var categoryCounts = new Dictionary<string, int>();
-
-                foreach (var categoryPath in categories)
-                {
-                    var categoryName = Path.GetFileName(categoryPath);
-                    var files = Directory.GetFiles(categoryPath, "*.txt");
-                    var fileCount = files.Length;
-
-                    categoryCounts[categoryName] = fileCount;
-                    totalFiles += fileCount;
-
-                    foreach (var filePath in files)
-                    {
-                        var fileInfo = new FileInfo(filePath);
-                        totalSize += fileInfo.Length;
-                    }
-                }
-
-                stats["TotalCategories"] = categories.Length;
-                stats["TotalFiles"] = totalFiles;
-                stats["TotalSize"] = totalSize;
-                stats["CategoryCounts"] = categoryCounts;
-                stats["AverageFilesPerCategory"] = categories.Length > 0 ? (double)totalFiles / categories.Length : 0;
+                CalculateStatistics(stats);
             }
             catch (Exception ex)
             {
@@ -299,10 +418,46 @@ namespace PromptMemoApp
             return stats;
         }
 
+        /// <summary>
+        /// 統計情報を計算
+        /// </summary>
+        private void CalculateStatistics(Dictionary<string, object> stats)
+        {
+            var categories = Directory.GetDirectories(baseDirectory);
+            int totalFiles = 0;
+            long totalSize = 0;
+            var categoryCounts = new Dictionary<string, int>();
+
+            foreach (var categoryPath in categories)
+            {
+                var categoryName = Path.GetFileName(categoryPath);
+                var files = Directory.GetFiles(categoryPath, "*.txt");
+                var fileCount = files.Length;
+
+                categoryCounts[categoryName] = fileCount;
+                totalFiles += fileCount;
+
+                totalSize += files.Sum(filePath => new FileInfo(filePath).Length);
+            }
+
+            stats["TotalCategories"] = categories.Length;
+            stats["TotalFiles"] = totalFiles;
+            stats["TotalSize"] = totalSize;
+            stats["CategoryCounts"] = categoryCounts;
+            stats["AverageFilesPerCategory"] = categories.Length > 0 ? (double)totalFiles / categories.Length : 0;
+        }
+        #endregion
+
+        #region イベントハンドラー
         private void treeViewCategories_AfterSelect(object sender, TreeViewEventArgs e)
         {
             currentCategory = e.Node.Text;
             LoadFiles(currentCategory);
+            ClearEditor();
+        }
+
+        private void ClearEditor()
+        {
             txtEditor.Clear();
             currentFilePath = "";
         }
@@ -317,20 +472,34 @@ namespace PromptMemoApp
         private void listViewFiles_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (listViewFiles.SelectedItems.Count == 0) return;
-            string fileName = listViewFiles.SelectedItems[0].Text + ".txt";
+
+            var selectedItem = listViewFiles.SelectedItems[0];
+            LoadSelectedFile(selectedItem);
+        }
+
+        /// <summary>
+        /// 選択されたファイルを読み込み
+        /// </summary>
+        private void LoadSelectedFile(ListViewItem selectedItem)
+        {
+            string fileName = selectedItem.Text + ".txt";
             string filePath = Path.Combine(baseDirectory, currentCategory, fileName);
             currentFilePath = filePath;
+
             if (File.Exists(filePath))
             {
                 var content = File.ReadAllText(filePath);
                 txtEditor.Text = content;
-                // 履歴を更新
-                historyManager.UpdateHistory(currentCategory, listViewFiles.SelectedItems[0].Text, filePath, content);
-                // お気に入り状態を更新
+
+                // 履歴とお気に入り状態を更新
+                historyManager.UpdateHistory(currentCategory, selectedItem.Text, filePath, content);
                 UpdateFavoriteButton();
             }
         }
 
+        /// <summary>
+        /// お気に入りボタンの表示を更新
+        /// </summary>
         private void UpdateFavoriteButton()
         {
             if (listViewFiles.SelectedItems.Count > 0)
@@ -341,7 +510,9 @@ namespace PromptMemoApp
                 btnFavorite.ForeColor = isFavorite ? Color.Red : Color.Black;
             }
         }
+        #endregion
 
+        #region ボタンイベント
         private void btnSave_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(currentFilePath))
@@ -362,22 +533,29 @@ namespace PromptMemoApp
                 return;
             }
 
+            ToggleFavorite();
+        }
+
+        /// <summary>
+        /// お気に入り状態を切り替え
+        /// </summary>
+        private void ToggleFavorite()
+        {
             var fileName = listViewFiles.SelectedItems[0].Text;
             var isFavorite = favoritesManager.IsFavorite(currentCategory, fileName);
 
             if (isFavorite)
             {
                 favoritesManager.RemoveFavorite(currentCategory, fileName);
-                btnFavorite.Text = "★";
                 MessageBox.Show("お気に入りから削除しました。", "お気に入り", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
                 favoritesManager.AddFavorite(currentCategory, fileName, currentFilePath);
-                btnFavorite.Text = "★";
-                btnFavorite.ForeColor = Color.Red;
                 MessageBox.Show("お気に入りに追加しました。", "お気に入り", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
+
+            UpdateFavoriteButton();
         }
 
         private async void btnTranslate_Click(object sender, EventArgs e)
@@ -388,21 +566,29 @@ namespace PromptMemoApp
                 return;
             }
 
+            await PerformTranslation();
+        }
+
+        /// <summary>
+        /// 翻訳処理を実行
+        /// </summary>
+        private async Task PerformTranslation()
+        {
             using (var dialog = new TranslationDialog(translationManager, txtEditor.Text))
             {
-                if (dialog.ShowDialog() == DialogResult.OK)
+                if (dialog.ShowDialog() != DialogResult.OK) return;
+
+                string sourceLang = dialog.GetSourceLanguage();
+                string targetLang = dialog.GetTargetLanguage();
+
+                if (sourceLang == targetLang)
                 {
-                    string sourceLang = dialog.GetSourceLanguage();
-                    string targetLang = dialog.GetTargetLanguage();
-                    if (sourceLang == targetLang)
-                    {
-                        MessageBox.Show("元言語と翻訳後の言語が同じです。", "翻訳", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        return;
-                    }
-                    // ここでtranslationManagerのメソッドを呼ぶ
-                    string translated = await translationManager.TranslateAsync(txtEditor.Text, sourceLang, targetLang);
-                    txtEditor.Text = translated;
+                    MessageBox.Show("元言語と翻訳後の言語が同じです。", "翻訳", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
                 }
+
+                string translated = await translationManager.TranslateAsync(txtEditor.Text, sourceLang, targetLang);
+                txtEditor.Text = translated;
             }
         }
 
@@ -414,72 +600,111 @@ namespace PromptMemoApp
                 return;
             }
 
+            CreateNewFile();
+        }
+
+        /// <summary>
+        /// 新しいファイルを作成
+        /// </summary>
+        private void CreateNewFile()
+        {
             using (var dialog = new InputDialog("新規ファイル作成", "ファイル名を入力してください:", ""))
             {
-                if (dialog.ShowDialog() == DialogResult.OK)
+                if (dialog.ShowDialog() != DialogResult.OK) return;
+
+                string fileName = dialog.InputText;
+                string filePath = Path.Combine(baseDirectory, currentCategory, fileName + ".txt");
+
+                if (File.Exists(filePath))
                 {
-                    string name = dialog.InputText;
-                    string path = Path.Combine(baseDirectory, currentCategory, name + ".txt");
-
-                    if (File.Exists(path))
-                    {
-                        MessageBox.Show("同名のファイルが存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
-                    }
-
-                    File.WriteAllText(path, "");
-                    LoadFiles(currentCategory);
+                    MessageBox.Show("同名のファイルが存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
+
+                File.WriteAllText(filePath, "");
+                LoadFiles(currentCategory);
             }
         }
 
         private void btnRename_Click(object sender, EventArgs e)
         {
             if (listViewFiles.SelectedItems.Count == 0) return;
+            RenameSelectedFile();
+        }
 
+        /// <summary>
+        /// 選択されたファイルの名前を変更
+        /// </summary>
+        private void RenameSelectedFile()
+        {
             string oldName = listViewFiles.SelectedItems[0].Text;
             using (var dialog = new InputDialog("ファイル名変更", "新しいファイル名を入力してください:", oldName))
             {
-                if (dialog.ShowDialog() == DialogResult.OK)
+                if (dialog.ShowDialog() != DialogResult.OK) return;
+
+                string newName = dialog.InputText;
+                string oldPath = Path.Combine(baseDirectory, currentCategory, oldName + ".txt");
+                string newPath = Path.Combine(baseDirectory, currentCategory, newName + ".txt");
+
+                if (File.Exists(newPath))
                 {
-                    string newName = dialog.InputText;
-                    string oldPath = Path.Combine(baseDirectory, currentCategory, oldName + ".txt");
-                    string newPath = Path.Combine(baseDirectory, currentCategory, newName + ".txt");
-
-                    if (File.Exists(newPath))
-                    {
-                        MessageBox.Show("同名のファイルが既に存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
-                    }
-
-                    File.Move(oldPath, newPath);
-                    LoadFiles(currentCategory);
+                    MessageBox.Show("同名のファイルが既に存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
+
+                File.Move(oldPath, newPath);
+                LoadFiles(currentCategory);
             }
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            var items = listViewFiles.SelectedItems.Cast<ListViewItem>().ToList();
-            if (items.Count == 0) return;
+            var selectedItems = listViewFiles.SelectedItems.Cast<ListViewItem>().ToList();
+            if (selectedItems.Count == 0) return;
 
-            if (MessageBox.Show("選択したファイルを削除しますか？", "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (ConfirmDeletion())
             {
-                foreach (var item in items)
-                {
-                    string path = Path.Combine(baseDirectory, currentCategory, item.Text + ".txt");
-                    if (File.Exists(path))
-                        File.Delete(path);
-                }
+                DeleteSelectedFiles(selectedItems);
                 LoadFiles(currentCategory);
+            }
+        }
+
+        /// <summary>
+        /// 削除の確認
+        /// </summary>
+        private bool ConfirmDeletion()
+        {
+            return MessageBox.Show("選択したファイルを削除しますか？", "確認",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+        }
+
+        /// <summary>
+        /// 選択されたファイルを削除
+        /// </summary>
+        private void DeleteSelectedFiles(List<ListViewItem> items)
+        {
+            foreach (var item in items)
+            {
+                string filePath = Path.Combine(baseDirectory, currentCategory, item.Text + ".txt");
+                if (File.Exists(filePath))
+                    File.Delete(filePath);
             }
         }
 
         private void btnMove_Click(object sender, EventArgs e)
         {
-            var items = listViewFiles.SelectedItems.Cast<ListViewItem>().ToList();
-            if (items.Count == 0 || comboBoxCategories.SelectedItem == null) return;
+            var selectedItems = listViewFiles.SelectedItems.Cast<ListViewItem>().ToList();
+            if (selectedItems.Count == 0 || comboBoxCategories.SelectedItem == null) return;
 
+            MoveSelectedFiles(selectedItems);
+            LoadFiles(currentCategory);
+        }
+
+        /// <summary>
+        /// 選択されたファイルを移動
+        /// </summary>
+        private void MoveSelectedFiles(List<ListViewItem> items)
+        {
             string destCategory = comboBoxCategories.SelectedItem.ToString();
             foreach (var item in items)
             {
@@ -488,52 +713,66 @@ namespace PromptMemoApp
                 if (File.Exists(srcPath))
                     File.Move(srcPath, destPath);
             }
-            LoadFiles(currentCategory);
         }
 
         private void btnAddCategory_Click(object sender, EventArgs e)
         {
-            using (var dialog = new InputDialog("カテゴリ作成", "カテゴリ名を入力してください:", ""))
-            {
-                if (dialog.ShowDialog() == DialogResult.OK)
-                {
-                    string name = dialog.InputText;
-                    string path = Path.Combine(baseDirectory, name);
-                    if (!Directory.Exists(path))
-                    {
-                        Directory.CreateDirectory(path);
-                        LoadCategories();
-                    }
-                    else
-                    {
-                        MessageBox.Show("同名のカテゴリが存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-            }
+            CreateNewCategory();
         }
 
+        /// <summary>
+        /// 新しいカテゴリを作成
+        /// </summary>
+        private void CreateNewCategory()
+        {
+            using (var dialog = new InputDialog("カテゴリ作成", "カテゴリ名を入力してください:", ""))
+            {
+                if (dialog.ShowDialog() != DialogResult.OK) return;
+
+                string categoryName = dialog.InputText;
+                string categoryPath = Path.Combine(baseDirectory, categoryName);
+
+                if (Directory.Exists(categoryPath))
+                {
+                    MessageBox.Show("同名のカテゴリが存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                Directory.CreateDirectory(categoryPath);
+                LoadCategories();
+            }
+        }
+        #endregion
+
+        #region メニューイベント
         private void renameCategoryMenuItem_Click(object sender, EventArgs e)
         {
             if (treeViewCategories.SelectedNode == null) return;
+            RenameCategoryDialog();
+        }
 
+        /// <summary>
+        /// カテゴリ名変更ダイアログを表示
+        /// </summary>
+        private void RenameCategoryDialog()
+        {
             string oldName = treeViewCategories.SelectedNode.Text;
             using (var dialog = new InputDialog("カテゴリ名変更", "新しいカテゴリ名を入力してください:", oldName))
             {
-                if (dialog.ShowDialog() == DialogResult.OK)
+                if (dialog.ShowDialog() != DialogResult.OK) return;
+
+                string newName = dialog.InputText;
+                string oldPath = Path.Combine(baseDirectory, oldName);
+                string newPath = Path.Combine(baseDirectory, newName);
+
+                if (Directory.Exists(newPath))
                 {
-                    string newName = dialog.InputText;
-                    string oldPath = Path.Combine(baseDirectory, oldName);
-                    string newPath = Path.Combine(baseDirectory, newName);
-                    if (!Directory.Exists(newPath))
-                    {
-                        Directory.Move(oldPath, newPath);
-                        LoadCategories();
-                    }
-                    else
-                    {
-                        MessageBox.Show("同名のカテゴリが存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    MessageBox.Show("同名のカテゴリが存在します。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
+
+                Directory.Move(oldPath, newPath);
+                LoadCategories();
             }
         }
 
@@ -541,17 +780,36 @@ namespace PromptMemoApp
         {
             if (treeViewCategories.SelectedNode == null) return;
 
-            string category = treeViewCategories.SelectedNode.Text;
-            string path = Path.Combine(baseDirectory, category);
-            if (MessageBox.Show("カテゴリを削除しますか？", "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            if (ConfirmCategoryDeletion())
             {
-                Directory.Delete(path, true);
-                LoadCategories();
-                listViewFiles.Items.Clear();
-                txtEditor.Clear();
+                DeleteSelectedCategory();
             }
         }
 
+        /// <summary>
+        /// カテゴリ削除の確認
+        /// </summary>
+        private bool ConfirmCategoryDeletion()
+        {
+            return MessageBox.Show("カテゴリを削除しますか？", "確認",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes;
+        }
+
+        /// <summary>
+        /// 選択されたカテゴリを削除
+        /// </summary>
+        private void DeleteSelectedCategory()
+        {
+            string category = treeViewCategories.SelectedNode.Text;
+            string categoryPath = Path.Combine(baseDirectory, category);
+
+            Directory.Delete(categoryPath, true);
+            LoadCategories();
+            listViewFiles.Items.Clear();
+            txtEditor.Clear();
+        }
+
+        // メニューイベントハンドラー（簡潔に）
         private void menuExit_Click(object sender, EventArgs e) => this.Close();
         private void menuNew_Click(object sender, EventArgs e) => btnNew_Click(sender, e);
         private void menuFavorites_Click(object sender, EventArgs e) => ShowFavoritesDialog();
@@ -561,7 +819,9 @@ namespace PromptMemoApp
         private void menuSort_Click(object sender, EventArgs e) => ShowSortSettings();
         private void menuStatistics_Click(object sender, EventArgs e) => ShowStatistics();
         private void menuExportImport_Click(object sender, EventArgs e) => ShowExportImportDialog();
+        #endregion
 
+        #region ダイアログ表示
         private void ShowFavoritesDialog()
         {
             using (var dialog = new FavoritesDialog(favoritesManager, OnFavoriteSelected))
@@ -586,34 +846,6 @@ namespace PromptMemoApp
             }
         }
 
-        private void OnFavoriteSelected(string category, string fileName)
-        {
-            // カテゴリを選択
-            var categoryNode = treeViewCategories.Nodes.Cast<TreeNode>().FirstOrDefault(n => n.Text == category);
-            if (categoryNode != null)
-            {
-                treeViewCategories.SelectedNode = categoryNode;
-                // ファイルを選択
-                var item = listViewFiles.Items.Cast<ListViewItem>().FirstOrDefault(i => i.Text == fileName);
-                if (item != null)
-                {
-                    item.Selected = true;
-                    item.Focused = true;
-                    listViewFiles.Select();
-                }
-            }
-        }
-
-        private void OnHistorySelected(string category, string fileName)
-        {
-            OnFavoriteSelected(category, fileName);
-        }
-
-        private void OnSearchResultSelected(string category, string fileName)
-        {
-            OnFavoriteSelected(category, fileName);
-        }
-
         private void ShowShortcutSettings()
         {
             var shortcutNames = new Dictionary<string, Keys>
@@ -634,7 +866,6 @@ namespace PromptMemoApp
             {
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
-                    // ショートカット設定を更新
                     var newShortcuts = dialog.GetShortcuts();
                     UpdateShortcuts(newShortcuts);
                 }
@@ -665,83 +896,120 @@ namespace PromptMemoApp
                 dialog.ShowDialog();
             }
         }
+        #endregion
 
-        private void SearchInFiles(string searchText)
+        #region ファイル選択・コールバック
+        /// <summary>
+        /// お気に入りから選択されたファイルを開く
+        /// </summary>
+        private void OnFavoriteSelected(string category, string fileName)
         {
-            var results = new List<string>();
-            foreach (var category in Directory.GetDirectories(baseDirectory))
-            {
-                var categoryName = Path.GetFileName(category);
-                foreach (var file in Directory.GetFiles(category, "*.txt"))
-                {
-                    var content = File.ReadAllText(file);
-                    if (content.Contains(searchText))
-                    {
-                        var fileName = Path.GetFileNameWithoutExtension(file);
-                        results.Add($"{categoryName}\\{fileName}");
-                    }
-                }
-            }
-
-            if (results.Count > 0)
-            {
-                var resultText = string.Join("\n", results);
-                MessageBox.Show($"検索結果:\n\n{resultText}", "検索結果", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            else
-            {
-                MessageBox.Show("検索結果が見つかりませんでした。", "検索結果", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+            SelectFileInCategory(category, fileName);
         }
 
+        /// <summary>
+        /// 履歴から選択されたファイルを開く
+        /// </summary>
+        private void OnHistorySelected(string category, string fileName)
+        {
+            SelectFileInCategory(category, fileName);
+        }
+
+        /// <summary>
+        /// 検索結果から選択されたファイルを開く
+        /// </summary>
+        private void OnSearchResultSelected(string category, string fileName)
+        {
+            SelectFileInCategory(category, fileName);
+        }
+
+        /// <summary>
+        /// 指定されたカテゴリとファイル名のファイルを選択
+        /// </summary>
+        private void SelectFileInCategory(string category, string fileName)
+        {
+            // カテゴリを選択
+            var categoryNode = treeViewCategories.Nodes.Cast<TreeNode>()
+                .FirstOrDefault(n => n.Text == category);
+            if (categoryNode != null)
+            {
+                treeViewCategories.SelectedNode = categoryNode;
+
+                // ファイルを選択
+                var item = listViewFiles.Items.Cast<ListViewItem>()
+                    .FirstOrDefault(i => i.Text == fileName);
+                if (item != null)
+                {
+                    item.Selected = true;
+                    item.Focused = true;
+                    listViewFiles.Select();
+                }
+            }
+        }
+        #endregion
+
+        #region ショートカット管理
+        /// <summary>
+        /// ショートカット設定を更新
+        /// </summary>
         private void UpdateShortcuts(Dictionary<string, Keys> newShortcuts)
         {
             shortcuts.Clear();
             foreach (var shortcut in newShortcuts)
             {
-                switch (shortcut.Key)
+                var action = GetActionForShortcut(shortcut.Key);
+                if (action != null)
                 {
-                    case "新規作成":
-                        shortcuts[shortcut.Value] = () => btnNew_Click(null, null);
-                        break;
-                    case "保存":
-                        shortcuts[shortcut.Value] = () => btnSave_Click(null, null);
-                        break;
-                    case "削除":
-                        shortcuts[shortcut.Value] = () => btnDelete_Click(null, null);
-                        break;
-                    case "名前変更":
-                        shortcuts[shortcut.Value] = () => btnRename_Click(null, null);
-                        break;
-                    case "移動":
-                        shortcuts[shortcut.Value] = () => btnMove_Click(null, null);
-                        break;
-                    case "カテゴリ作成":
-                        shortcuts[shortcut.Value] = () => btnAddCategory_Click(null, null);
-                        break;
-                    case "更新":
-                        shortcuts[shortcut.Value] = () => LoadCategories();
-                        break;
-                    case "検索":
-                        shortcuts[shortcut.Value] = () => ShowSearchDialog();
-                        break;
-                    case "お気に入り":
-                        shortcuts[shortcut.Value] = () => ShowFavoritesDialog();
-                        break;
-                    case "履歴":
-                        shortcuts[shortcut.Value] = () => ShowHistoryDialog();
-                        break;
+                    shortcuts[shortcut.Value] = action;
                 }
             }
         }
 
-        private void PromptEditorForm_Load(object sender, EventArgs e)
+        /// <summary>
+        /// ショートカット名に対応するアクションを取得
+        /// </summary>
+        private Action GetActionForShortcut(string shortcutName)
         {
-
+            switch (shortcutName)
+            {
+                case "新規作成": return () => btnNew_Click(null, null);
+                case "保存": return () => btnSave_Click(null, null);
+                case "削除": return () => btnDelete_Click(null, null);
+                case "名前変更": return () => btnRename_Click(null, null);
+                case "移動": return () => btnMove_Click(null, null);
+                case "カテゴリ作成": return () => btnAddCategory_Click(null, null);
+                case "更新": return () => LoadCategories();
+                case "検索": return () => ShowSearchDialog();
+                case "お気に入り": return () => ShowFavoritesDialog();
+                case "履歴": return () => ShowHistoryDialog();
+                default: return null;
+            }
         }
+        #endregion
+
+        #region ユーティリティメソッド
+        /// <summary>
+        /// エラーメッセージを表示
+        /// </summary>
+        private void ShowErrorMessage(string title, string message)
+        {
+            MessageBox.Show($"{title}: {message}", "エラー",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        #endregion
+
+        #region 使用されていないメソッド（削除対象）
+        // 以下のメソッドは使用されていないため削除しました
+        // - SearchInFiles メソッド（ShowSearchDialogで代替）
+        // - categoryStats フィールド（使用されていない）
+        // - PromptEditorForm_Load イベント（空メソッドのため削除）
+        #endregion
     }
 
-    // エクスポート/インポート用のデータクラス
+    #region データクラス
+    /// <summary>
+    /// エクスポート用のデータ構造
+    /// </summary>
     public class ExportData
     {
         public List<CategoryData> Categories { get; set; }
@@ -749,12 +1017,18 @@ namespace PromptMemoApp
         public string Version { get; set; } = "1.0";
     }
 
+    /// <summary>
+    /// カテゴリデータ
+    /// </summary>
     public class CategoryData
     {
         public string Name { get; set; }
         public List<FileData> Files { get; set; }
     }
 
+    /// <summary>
+    /// ファイルデータ
+    /// </summary>
     public class FileData
     {
         public string Name { get; set; }
@@ -762,4 +1036,5 @@ namespace PromptMemoApp
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
     }
+    #endregion
 }
