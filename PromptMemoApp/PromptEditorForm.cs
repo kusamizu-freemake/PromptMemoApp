@@ -17,7 +17,7 @@ namespace PromptMemoApp
         private string currentFilePath = "";
 
         // 各種マネージャー - インターフェースを使用
-        private IFavoritesManager favoritesManager;
+        private FavoritesManager favoritesManager;
         private HistoryManager historyManager;
         private TranslationManager translationManager;
 
