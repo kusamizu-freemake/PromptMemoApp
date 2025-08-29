@@ -16,8 +16,8 @@ namespace PromptMemoApp
         private string currentCategory = "";
         private string currentFilePath = "";
 
-        // 各種マネージャー
-        private FavoritesManager favoritesManager;
+        // 各種マネージャー - インターフェースを使用
+        private IFavoritesManager favoritesManager;
         private HistoryManager historyManager;
         private TranslationManager translationManager;
 
@@ -62,6 +62,7 @@ namespace PromptMemoApp
         /// </summary>
         private void InitializeManagers()
         {
+            // FavoritesManagerをIFavoritesManagerとして初期化
             favoritesManager = new FavoritesManager(baseDirectory);
             historyManager = new HistoryManager(baseDirectory);
             translationManager = new TranslationManager();
@@ -996,13 +997,6 @@ namespace PromptMemoApp
             MessageBox.Show($"{title}: {message}", "エラー",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-        #endregion
-
-        #region 使用されていないメソッド（削除対象）
-        // 以下のメソッドは使用されていないため削除しました
-        // - SearchInFiles メソッド（ShowSearchDialogで代替）
-        // - categoryStats フィールド（使用されていない）
-        // - PromptEditorForm_Load イベント（空メソッドのため削除）
         #endregion
     }
 
