@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace PromptMemoApp
@@ -49,14 +48,28 @@ namespace PromptMemoApp
             MinimizeBox = false;
 
             // テキストボックスの設定（セキュリティ強化）
+            SetupTextBoxSecurity();
+
+            // 追加のイベントハンドラー設定
+            SetupAdditionalEventHandlers();
+        }
+
+        /// <summary>
+        /// テキストボックスのセキュリティ設定を行います
+        /// </summary>
+        private void SetupTextBoxSecurity()
+        {
             if (txtApiKey != null)
             {
                 txtApiKey.UseSystemPasswordChar = true; // パスワード文字で表示
                 txtApiKey.MaxLength = 256; // 最大長制限
-            }
 
-            // 追加のイベントハンドラー設定
-            SetupAdditionalEventHandlers();
+                // イベントハンドラーの追加（Designerで設定されていない場合）
+                txtApiKey.Enter -= txtApiKey_Enter;  // 重複登録を防ぐ
+                txtApiKey.Leave -= txtApiKey_Leave;  // 重複登録を防ぐ
+                txtApiKey.Enter += txtApiKey_Enter;
+                txtApiKey.Leave += txtApiKey_Leave;
+            }
         }
 
         /// <summary>
@@ -65,7 +78,7 @@ namespace PromptMemoApp
         private void SetupAdditionalEventHandlers()
         {
             // フォーム表示時にテキストボックスにフォーカス
-            Shown += (s, e) => txtApiKey?.Focus();
+            Shown += OnFormShown;
 
             // Enterキーで保存
             if (btnSave != null)
@@ -73,12 +86,80 @@ namespace PromptMemoApp
                 AcceptButton = btnSave;
             }
 
-            // Escapeキーでキャンセル（btnCancelが存在する場合のみ）
-            var cancelButton = Controls.Find("btnCancel", true).FirstOrDefault() as Button;
-            if (cancelButton != null)
+            // Escapeキーでキャンセル（安全に検索）
+            SetupCancelButton();
+        }
+
+        /// <summary>
+        /// キャンセルボタンの設定を行います
+        /// </summary>
+        private void SetupCancelButton()
+        {
+            // まず直接的な参照を試す（Designerで定義されている場合）
+            try
             {
-                CancelButton = cancelButton;
+                // この時点でbtnCancelが存在するかチェック
+                var cancelButtonField = GetType().GetField("btnCancel",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                if (cancelButtonField != null)
+                {
+                    var cancelButton = cancelButtonField.GetValue(this) as Button;
+                    if (cancelButton != null)
+                    {
+                        CancelButton = cancelButton;
+                        return;
+                    }
+                }
             }
+            catch
+            {
+                // 失敗した場合は無視
+            }
+
+            // フォールバック: 名前で検索
+            var foundCancelButton = FindControlByName("btnCancel") as Button;
+            if (foundCancelButton != null)
+            {
+                CancelButton = foundCancelButton;
+            }
+        }
+
+        /// <summary>
+        /// 名前でコントロールを検索します
+        /// </summary>
+        /// <param name="name">コントロール名</param>
+        /// <returns>見つかったコントロール、見つからない場合は null</returns>
+        private Control FindControlByName(string name)
+        {
+            foreach (Control control in Controls)
+            {
+                if (control.Name == name)
+                    return control;
+
+                // 再帰的に子コントロールも検索
+                var found = FindControlByNameRecursive(control, name);
+                if (found != null)
+                    return found;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 再帰的にコントロールを検索します
+        /// </summary>
+        private Control FindControlByNameRecursive(Control parent, string name)
+        {
+            foreach (Control child in parent.Controls)
+            {
+                if (child.Name == name)
+                    return child;
+
+                var found = FindControlByNameRecursive(child, name);
+                if (found != null)
+                    return found;
+            }
+            return null;
         }
         #endregion
 
@@ -148,11 +229,18 @@ namespace PromptMemoApp
         /// <returns>有効な場合は true</returns>
         private bool ValidateApiKey(string apiKey)
         {
+            // 空文字チェック
             if (string.IsNullOrWhiteSpace(apiKey))
             {
                 ShowValidationError("APIキーを入力してください。");
                 txtApiKey?.Focus();
                 return false;
+            }
+
+            // マスクの場合はスキップ（既存キー保持）
+            if (apiKey == MASKED_API_KEY)
+            {
+                return true;
             }
 
             // 基本的な形式チェック
@@ -164,7 +252,7 @@ namespace PromptMemoApp
             }
 
             // 不正文字のチェック
-            if (apiKey.Contains(" ") || apiKey.Contains("\t") || apiKey.Contains("\n"))
+            if (ContainsInvalidCharacters(apiKey))
             {
                 ShowValidationError("APIキーに無効な文字が含まれています。");
                 txtApiKey?.Focus();
@@ -173,9 +261,30 @@ namespace PromptMemoApp
 
             return true;
         }
+
+        /// <summary>
+        /// 無効な文字が含まれているかチェックします
+        /// </summary>
+        /// <param name="apiKey">チェックするAPIキー</param>
+        /// <returns>無効な文字が含まれている場合は true</returns>
+        private bool ContainsInvalidCharacters(string apiKey)
+        {
+            return apiKey.Contains(" ") ||
+                   apiKey.Contains("\t") ||
+                   apiKey.Contains("\n") ||
+                   apiKey.Contains("\r");
+        }
         #endregion
 
         #region イベントハンドラ
+        /// <summary>
+        /// フォーム表示時の処理
+        /// </summary>
+        private void OnFormShown(object sender, EventArgs e)
+        {
+            txtApiKey?.Focus();
+        }
+
         /// <summary>
         /// 保存ボタンクリック時の処理
         /// </summary>
@@ -259,29 +368,50 @@ namespace PromptMemoApp
         }
 
         /// <summary>
-        /// リソースの適切な解放を行います
+        /// フォームが閉じられる時の処理
         /// </summary>
-        protected override void Dispose(bool disposing)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
-            if (disposing)
+            // セキュリティ: メモリから機密データを消去
+            ClearSensitiveData();
+
+            // イベントハンドラーの解除
+            CleanupEventHandlers();
+
+            base.OnFormClosed(e);
+        }
+
+        /// <summary>
+        /// イベントハンドラーをクリーンアップします
+        /// </summary>
+        private void CleanupEventHandlers()
+        {
+            try
             {
-                // セキュリティ: メモリからAPIキーを消去
+                Shown -= OnFormShown;
+
                 if (txtApiKey != null)
                 {
-                    txtApiKey.Text = string.Empty;
+                    txtApiKey.Enter -= txtApiKey_Enter;
+                    txtApiKey.Leave -= txtApiKey_Leave;
                 }
             }
-            base.Dispose(disposing);
+            catch
+            {
+                // イベントハンドラー解除時のエラーは無視
+            }
         }
-        #endregion
 
-        #region 削除推奨メソッド
-        // 注意: このメソッドは不要で混乱を招く可能性があるため削除を推奨
-        // private void BtnApiSettings_Click(object sender, EventArgs e)
-        // {
-        //     // この処理は ApiSettingsDialog 内部で ApiSettingsDialog を開いており、
-        //     // 無限ループやメモリリークの原因となる可能性があります
-        // }
+        /// <summary>
+        /// 機密データをメモリから消去します
+        /// </summary>
+        private void ClearSensitiveData()
+        {
+            if (txtApiKey != null)
+            {
+                txtApiKey.Text = string.Empty;
+            }
+        }
         #endregion
     }
 }
